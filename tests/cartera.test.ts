@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { Dinero } from "../src/dominio/dinero.js";
-import { calcularCarteraEnRiesgo, CreditoParaCartera } from "../src/dominio/cartera.js";
+import {
+  calcularCarteraEnRiesgo,
+  CreditoParaCartera,
+  ErrorParametrosCartera,
+  formatearPorcentaje,
+} from "../src/dominio/cartera.js";
 
 // Caso de referencia obligatorio (seccion 6.8.1): cartera de siete creditos.
 function carteraBase(): CreditoParaCartera[] {
@@ -47,5 +52,28 @@ describe("Cartera en riesgo - caso de referencia 6.8.1", () => {
     const resultado = calcularCarteraEnRiesgo(carteraBase());
     expect(resultado.porcentaje).toBeGreaterThanOrEqual(0);
     expect(resultado.porcentaje).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("formatearPorcentaje", () => {
+  it("formatea 0.07 como '7.00%' y 0.0606... como '6.06%'", () => {
+    expect(formatearPorcentaje(0.07)).toBe("7.00%");
+    expect(formatearPorcentaje(48000 / 792000)).toBe("6.06%");
+  });
+});
+
+describe("calcularCarteraEnRiesgo - validacion de parametros (invariante 6.10)", () => {
+  it("lanza ErrorParametrosCartera si el saldo de capital es negativo", () => {
+    const creditos: CreditoParaCartera[] = [
+      { id: "C-X", saldoCapital: Dinero.deQuetzales(-1.0), diasDeAtraso: 0, reestructurado: false, incobrable: false },
+    ];
+    expect(() => calcularCarteraEnRiesgo(creditos)).toThrow(ErrorParametrosCartera);
+  });
+
+  it("lanza ErrorParametrosCartera si los dias de atraso son negativos", () => {
+    const creditos: CreditoParaCartera[] = [
+      { id: "C-X", saldoCapital: Dinero.deQuetzales(100.0), diasDeAtraso: -5, reestructurado: false, incobrable: false },
+    ];
+    expect(() => calcularCarteraEnRiesgo(creditos)).toThrow(ErrorParametrosCartera);
   });
 });

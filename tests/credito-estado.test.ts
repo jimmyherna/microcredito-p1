@@ -57,6 +57,17 @@ describe("Ciclo de vida del credito (patron State) - seccion 6.7", () => {
     expect(cancelado).toBe("CANCELADO");
   });
 
+  it("tabla 6.7.1: reestructurado regulariza a vigente al cumplir su nuevo plan al dia", () => {
+    const estado = aplicarEvento("REESTRUCTURADO", "CUMPLE_NUEVO_PLAN_AL_DIA", { diasDeAtraso: 0 });
+    expect(estado).toBe("VIGENTE");
+  });
+
+  it("no regulariza el nuevo plan si aun tiene dias de atraso pendientes", () => {
+    expect(() =>
+      aplicarEvento("REESTRUCTURADO", "CUMPLE_NUEVO_PLAN_AL_DIA", { diasDeAtraso: 2 })
+    ).toThrow(ErrorTransicionInvalida);
+  });
+
   it("incobrable: supera 120 dias sin arreglo y no regresa a la cartera aunque pague despues", () => {
     const incobrable = aplicarEvento("EN_MORA", "SUPERA_120_DIAS_SIN_ARREGLO", { diasDeAtraso: 121 });
     expect(incobrable).toBe("INCOBRABLE");

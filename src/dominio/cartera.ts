@@ -15,6 +15,23 @@ export interface ResultadoCarteraEnRiesgo {
   creditosEnRiesgo: string[];
 }
 
+export class ErrorParametrosCartera extends Error {
+  constructor(mensaje: string) {
+    super(mensaje);
+    this.name = "ErrorParametrosCartera";
+  }
+}
+
+/** Invariante 6.10: "ningun saldo de capital es negativo" y los dias de atraso no pueden ser negativos. */
+function validarCredito(credito: CreditoParaCartera): void {
+  if (credito.saldoCapital.centavos < 0) {
+    throw new ErrorParametrosCartera(`El credito ${credito.id} tiene saldo de capital negativo.`);
+  }
+  if (!Number.isInteger(credito.diasDeAtraso) || credito.diasDeAtraso < 0) {
+    throw new ErrorParametrosCartera(`El credito ${credito.id} tiene dias de atraso invalidos.`);
+  }
+}
+
 /**
  * Un credito entra a "cartera en riesgo" si:
  *   - tiene mas de 30 dias de atraso en su cuota mas atrasada, O
@@ -24,6 +41,10 @@ export interface ResultadoCarteraEnRiesgo {
  * denominador). Seccion 6.8.
  */
 export function calcularCarteraEnRiesgo(creditos: CreditoParaCartera[]): ResultadoCarteraEnRiesgo {
+  for (const credito of creditos) {
+    validarCredito(credito);
+  }
+
   const activos = creditos.filter((c) => !c.incobrable);
 
   const moneda = activos[0]?.saldoCapital.moneda ?? "GTQ";
@@ -47,4 +68,12 @@ export function calcularCarteraEnRiesgo(creditos: CreditoParaCartera[]): Resulta
 
   const porcentaje = carteraEnRiesgo.centavos / carteraActiva.centavos;
   return { carteraActiva, carteraEnRiesgo, porcentaje, creditosEnRiesgo };
+}
+
+/**
+ * Formatea una fraccion (0..1) como porcentaje legible para el cierre
+ * mensual (seccion 6.9), ej. 0.07 -> "7.00%".
+ */
+export function formatearPorcentaje(fraccion: number): string {
+  return `${(fraccion * 100).toFixed(2)}%`;
 }

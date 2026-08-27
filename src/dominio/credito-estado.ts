@@ -32,7 +32,8 @@ export type EventoCredito =
   | "PAGA_PARTE_DE_LO_VENCIDO"
   | "ACUERDA_NUEVAS_CONDICIONES"
   | "SUPERA_120_DIAS_SIN_ARREGLO"
-  | "RECUPERACION_VIA_CASA_DE_COBRO";
+  | "RECUPERACION_VIA_CASA_DE_COBRO"
+  | "CUMPLE_NUEVO_PLAN_AL_DIA";
 
 export interface ContextoTransicion {
   diasDeAtraso?: number;
@@ -70,6 +71,11 @@ const TABLA_TRANSICIONES: DefinicionTransicion[] = [
   { desde: "EN_MORA", evento: "SUPERA_120_DIAS_SIN_ARREGLO", guarda: (c) => (c.diasDeAtraso ?? 0) > 120, hasta: "INCOBRABLE" },
   { desde: "REESTRUCTURADO", evento: "VENCE_CUOTA_IMPAGADA", guarda: (c) => (c.diasDeAtraso ?? 0) >= 1, hasta: "EN_MORA" },
   { desde: "REESTRUCTURADO", evento: "PAGA_ULTIMA_CUOTA", guarda: (c) => c.saldoRestante === 0, hasta: "CANCELADO" },
+  // Tabla 6.7.1: "reestructurado -> cumple su nuevo plan al día -> vigente (sigue marcado en riesgo)".
+  // La transición es operativa, no estadística: el crédito vuelve a VIGENTE, pero
+  // el flag `reestructurado` en CreditoParaCartera (cartera.ts) no se borra, así
+  // que sigue contando en la cartera en riesgo aunque el estado ya no lo diga.
+  { desde: "REESTRUCTURADO", evento: "CUMPLE_NUEVO_PLAN_AL_DIA", guarda: (c) => (c.diasDeAtraso ?? 0) === 0, hasta: "VIGENTE" },
   { desde: "INCOBRABLE", evento: "RECUPERACION_VIA_CASA_DE_COBRO", hasta: "INCOBRABLE" },
 ];
 
