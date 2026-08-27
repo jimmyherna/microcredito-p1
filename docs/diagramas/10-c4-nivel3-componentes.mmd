@@ -1,0 +1,30 @@
+%% C4 Modelo — Nivel 3: Componentes del contenedor "Nucleo de Dominio"
+%% Abrir/editar en https://mermaid.live (pegar este codigo)
+C4Component
+    title Nucleo de Dominio — Componentes (C4 Nivel 3)
+
+    Container_Boundary(nucleo, "Nucleo de Dominio (src/dominio)") {
+        Component(dinero, "Dinero", "Value Object", "Importes en centavos, inmutable (6.2)")
+        Component(plan, "PlanAmortizacion", "Factory + Strategy", "Amortizacion francesa, ajuste de ultima cuota (6.4)")
+        Component(mora, "CalculadoraMora", "Specification", "Interes moratorio y tramos (6.5)")
+        Component(prelacion, "PrelacionPago", "Chain of Responsibility", "Aplicacion de pagos en orden (6.6)")
+        Component(cartera, "Cartera", "Funciones puras", "Cartera en riesgo (6.8)")
+        Component(estado, "CreditoEstado", "State", "Ciclo de vida y transiciones (6.7)")
+        Component(puertoReloj, "Reloj", "Puerto secundario", "Fecha de corte inyectada, nunca Date.now()")
+        Component(puertoRepo, "RepositorioCreditos", "Puerto secundario (Repository)", "DIP: interfaz de persistencia")
+    }
+
+    Container(api, "API REST / Servidor MCP", "Adaptadores primarios", "Invocan los casos de uso")
+    ContainerDb(db, "PostgreSQL", "Adaptador secundario", "Implementa RepositorioCreditos")
+
+    Rel(api, plan, "Usa para generar planes")
+    Rel(api, mora, "Usa para calcular mora")
+    Rel(api, prelacion, "Usa al registrar pagos")
+    Rel(api, cartera, "Usa para cierres")
+    Rel(api, estado, "Usa para transicionar creditos")
+    Rel(plan, dinero, "Usa")
+    Rel(mora, dinero, "Usa")
+    Rel(prelacion, dinero, "Usa")
+    Rel(cartera, dinero, "Usa")
+    Rel(estado, puertoReloj, "Consulta fecha de corte")
+    Rel(db, puertoRepo, "Implementa")

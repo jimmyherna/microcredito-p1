@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: API - Sistema de Gestion de Microcredito (Credito Vecino, S.A.)
+  version: "1.0.0"
+  description: >
+    Contrato de los casos de uso del nucleo hexagonal (Proyecto 1, E5).
+    Los esquemas se derivan de validadores Zod (seccion 8.2) y se comparten
+    con el futuro servidor MCP (Proyecto Final).
+servers:
+  - url: https://api.creditovecino.example.com/v1
+    description: Entorno de referencia (no implementado en el Proyecto 1)
+
+paths:
+  /clientes:
+    post:
+      summary: Registrar cliente
+      operationId: registrarCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NuevoCliente" }
+      responses:
+        "201": { description: Cliente creado, content: { application/json: { schema: { $ref: "#/components/schemas/Cliente" } } } }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+
+  /solicitudes:
+    post:
+      summary: Solicitar credito
+      operationId: solicitarCredito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NuevaSolicitudCredito" }
+      responses:
+        "201": { description: Solicitud registrada, content: { application/json: { schema: { $ref: "#/components/schemas/SolicitudCredito" } } } }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+
+  /solicitudes/{id}/evaluar:
+    post:
+      summary: Evaluar / aprobar o rechazar una solicitud
+      operationId: evaluarSolicitud
+      parameters: [ { $ref: "#/components/parameters/IdPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DecisionComite" }
+      responses:
+        "200": { description: Solicitud evaluada, content: { application/json: { schema: { $ref: "#/components/schemas/SolicitudCredito" } } } }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/TransicionInvalida" }
+
+  /creditos/{id}/desembolsar:
+    post:
+      summary: Desembolsar credito aprobado (genera el plan de amortizacion)
+      operationId: desembolsarCredito
+      parameters: [ { $ref: "#/components/parameters/IdPath" } ]
+      responses:
+        "200": { description: Credito desembolsado, content: { application/json: { schema: { $ref: "#/components/schemas/Credito" } } } }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/TransicionInvalida" }
+
+  /creditos/{id}:
+    get:
+      summary: Consultar un credito (incluye plan, estado y tramo)
+      operationId: consultarCredito
+      parameters: [ { $ref: "#/components/parameters/IdPath" } ]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Credito" } } } }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+
+  /pagos:
+    post:
+      summary: Registrar pago de cuota (aplica prelacion, seccion 6.6)
+      operationId: registrarPago
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NuevoPago" }
+      responses:
+        "200":
+          description: Pago aplicado (o idempotentemente ya aplicado antes)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResultadoPago" }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/TransicionInvalida" }
+
+  /cierres:
+    post:
+      summary: Generar cierre (diario o mensual) - idempotente por fecha de corte
+      operationId: generarCierre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComandoCierre" }
+      responses:
+        "200": { description: Cierre generado o recuperado (idempotente), content: { application/json: { schema: { $ref: "#/components/schemas/Cierre" } } } }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+
+  /cartera/en-riesgo:
+    get:
+      summary: Consultar cartera en riesgo (seccion 6.8)
+      operationId: consultarCarteraEnRiesgo
+      parameters:
+        - name: fechaCorte
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/CarteraEnRiesgo" } } } }
+
+components:
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    ErrorValidacion:
+      description: Error de validacion de entrada (Zod)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NoEncontrado:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TransicionInvalida:
+      description: >
+        La operacion no es aplicable al estado actual del credito
+        (ErrorTransicionInvalida del nucleo de dominio).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [codigo, mensaje]
+      properties:
+        codigo: { type: string, example: "TRANSICION_INVALIDA" }
+        mensaje: { type: string }
+        detalles: { type: object, additionalProperties: true }
+
+    Dinero:
+      type: object
+      description: Serializacion de un Objeto de Valor Dinero. `centavos` es la fuente de verdad; `monto` es solo de lectura.
+      required: [centavos, moneda]
+      properties:
+        centavos: { type: integer, example: 100462 }
+        moneda: { type: string, enum: [GTQ, USD], example: GTQ }
+        monto: { type: number, readOnly: true, example: 1004.62 }
+
+    NuevoCliente:
+      type: object
+      required: [nombre, dpi, direccion]
+      properties:
+        nombre: { type: string }
+        dpi: { type: string, pattern: "^[0-9]{13}$" }
+        direccion: { type: string }
+
+    Cliente:
+      allOf:
+        - $ref: "#/components/schemas/NuevoCliente"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+
+    NuevaSolicitudCredito:
+      type: object
+      required: [clienteId, montoSolicitado, plazoMeses]
+      properties:
+        clienteId: { type: string }
+        montoSolicitado: { $ref: "#/components/schemas/Dinero" }
+        plazoMeses: { type: integer, minimum: 3, maximum: 24 }
+
+    SolicitudCredito:
+      allOf:
+        - $ref: "#/components/schemas/NuevaSolicitudCredito"
+        - type: object
+          required: [id, estado, fechaSolicitud]
+          properties:
+            id: { type: string }
+            estado: { type: string, enum: [SOLICITADO, APROBADO, RECHAZADO, ANULADO] }
+            fechaSolicitud: { type: string, format: date }
+
+    DecisionComite:
+      type: object
+      required: [decision]
+      properties:
+        decision: { type: string, enum: [APRUEBA, RECHAZA] }
+        motivo: { type: string }
+
+    Credito:
+      type: object
+      required: [id, estado, capitalDesembolsado, tasaMensual, numeroCuotas]
+      properties:
+        id: { type: string }
+        estado:
+          type: string
+          enum: [SOLICITADO, APROBADO, RECHAZADO, ANULADO, VIGENTE, EN_MORA, REESTRUCTURADO, CANCELADO, INCOBRABLE]
+        tramo:
+          type: string
+          enum: [AL_DIA, MORA_1, MORA_2, MORA_3, VENCIDO, INCOBRABLE]
+          description: Clasificacion derivada de los dias de atraso; no es el estado.
+        capitalDesembolsado: { $ref: "#/components/schemas/Dinero" }
+        tasaMensual: { type: number, example: 0.03 }
+        numeroCuotas: { type: integer, example: 12 }
+        politicaVersion: { type: string }
+
+    NuevoPago:
+      type: object
+      required: [creditoId, monto, claveIdempotencia]
+      properties:
+        creditoId: { type: string }
+        monto: { $ref: "#/components/schemas/Dinero" }
+        claveIdempotencia:
+          type: string
+          description: Reintentar el mismo pago con la misma clave no debe cobrar dos veces (invariante 6.10).
+        fecha: { type: string, format: date }
+
+    DesgloseAplicacionRubro:
+      type: object
+      properties:
+        rubro: { type: string, enum: [gastos, interesMoratorio, interesCorriente, capital] }
+        adeudado: { $ref: "#/components/schemas/Dinero" }
+        aplicado: { $ref: "#/components/schemas/Dinero" }
+        pendiente: { $ref: "#/components/schemas/Dinero" }
+
+    ResultadoPago:
+      type: object
+      properties:
+        detalle:
+          type: array
+          items: { $ref: "#/components/schemas/DesgloseAplicacionRubro" }
+        excedente: { $ref: "#/components/schemas/Dinero" }
+        cuotaSaldada: { type: boolean }
+        nuevoEstado: { type: string }
+        tramo: { type: string }
+
+    ComandoCierre:
+      type: object
+      required: [tipo, fechaCorte]
+      properties:
+        tipo: { type: string, enum: [DIARIO, MENSUAL] }
+        fechaCorte: { type: string, format: date }
+
+    Cierre:
+      type: object
+      properties:
+        fechaCorte: { type: string, format: date }
+        tipo: { type: string, enum: [DIARIO, MENSUAL] }
+        carteraActiva: { $ref: "#/components/schemas/Dinero" }
+        carteraEnRiesgo: { $ref: "#/components/schemas/Dinero" }
+        porcentajeEnRiesgo: { type: number, minimum: 0, maximum: 1, example: 0.07 }
+        dadoPorIncobrableEnPeriodo: { $ref: "#/components/schemas/Dinero" }
+
+    CarteraEnRiesgo:
+      type: object
+      properties:
+        fechaCorte: { type: string, format: date }
+        carteraActiva: { $ref: "#/components/schemas/Dinero" }
+        carteraEnRiesgo: { $ref: "#/components/schemas/Dinero" }
+        porcentaje: { type: number, minimum: 0, maximum: 1 }
+        creditosEnRiesgo:
+          type: array
+          items: { type: string }
