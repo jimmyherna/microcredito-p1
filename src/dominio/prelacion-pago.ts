@@ -1,6 +1,5 @@
 import { Dinero } from "./dinero.js";
 
-/** Deuda pendiente de una cuota vencida, desglosada por rubro (seccion 6.6.1). */
 export interface DeudaCuota {
   gastos: Dinero;
   interesMoratorio: Dinero;
@@ -15,7 +14,9 @@ export interface AplicacionRubro {
   pendiente: Dinero;
 }
 
-export type DestinoExcedente = "AMORTIZACION_CAPITAL" | "PAGO_ANTICIPADO_CUOTAS_FUTURAS";
+export type DestinoExcedente =
+  | "AMORTIZACION_CAPITAL"
+  | "PAGO_ANTICIPADO_CUOTAS_FUTURAS";
 
 export interface ResultadoAplicacionPago {
   detalle: AplicacionRubro[];
@@ -24,81 +25,120 @@ export interface ResultadoAplicacionPago {
   cuotaSaldada: boolean;
 }
 
-/**
- * Eslabon de la cadena (Chain of Responsibility, GoF): consume lo que le
- * corresponde de un rubro y devuelve cuanto le quedo disponible al pago
- * para el siguiente eslabon.
- */
 class EslabonRubro {
-  constructor(
-    private readonly nombre: AplicacionRubro["rubro"],
-    private readonly monto: Dinero
-  ) {}
+  private readonly nombre: AplicacionRubro["rubro"];
+  private readonly monto: Dinero;
 
-  aplicar(disponible: Dinero): { fila: AplicacionRubro; restante: Dinero } {
-    const aplicado = disponible.min(this.monto);
-    const pendiente = this.monto.restar(aplicado);
-    const restante = disponible.restar(aplicado);
+  constructor(
+    nombre: AplicacionRubro["rubro"],
+    monto: Dinero
+  ) {
+    this.nombre = nombre;
+    this.monto = monto;
+  }
+
+  aplicar(
+    disponible: Dinero
+  ): {
+    fila: AplicacionRubro;
+    restante: Dinero;
+  } {
+    const cantidadAplicada = disponible.min(this.monto);
+    const cantidadPendiente = this.monto.restar(cantidadAplicada);
+    const cantidadRestante = disponible.restar(cantidadAplicada);
+
+    const fila: AplicacionRubro = {
+      rubro: this.nombre,
+      adeudado: this.monto,
+      aplicado: cantidadAplicada,
+      pendiente: cantidadPendiente
+    };
+
     return {
-      fila: { rubro: this.nombre, adeudado: this.monto, aplicado, pendiente },
-      restante,
+      fila: fila,
+      restante: cantidadRestante
     };
   }
 }
 
-/**
- * Orden de aplicacion obligatorio (seccion 6.6.2):
- *   1. Gastos y comisiones
- *   2. Interes moratorio
- *   3. Interes corriente
- *   4. Capital
- *
- * Cambiar el orden es una decision de negocio (Chain of Responsibility):
- * basta reordenar la cadena, sin tocar la logica de cada eslabon.
- */
-export function aplicarPagoAPrelacion(monto: Dinero, deuda: DeudaCuota): ResultadoAplicacionPago {
-  const cadena: EslabonRubro[] = [
-    new EslabonRubro("gastos", deuda.gastos),
-    new EslabonRubro("interesMoratorio", deuda.interesMoratorio),
-    new EslabonRubro("interesCorriente", deuda.interesCorriente),
-    new EslabonRubro("capital", deuda.capital),
-  ];
+export function aplicarPagoAPrelacion(
+  monto: Dinero,
+  deuda: DeudaCuota
+): ResultadoAplicacionPago {
+  const cadena: EslabonRubro[] = [];
+
+  cadena.push(
+    new EslabonRubro("gastos", deuda.gastos)
+  );
+
+  cadena.push(
+    new EslabonRubro(
+      "interesMoratorio",
+      deuda.interesMoratorio
+    )
+  );
+
+  cadena.push(
+    new EslabonRubro(
+      "interesCorriente",
+      deuda.interesCorriente
+    )
+  );
+
+  cadena.push(
+    new EslabonRubro("capital", deuda.capital)
+  );
 
   let disponible = monto;
   const detalle: AplicacionRubro[] = [];
 
-  for (const eslabon of cadena) {
-    const { fila, restante } = eslabon.aplicar(disponible);
-    detalle.push(fila);
-    disponible = restante;
+  for (let i = 0; i < cadena.length; i++) {
+    const resultado = cadena[i];
+
+    if (!resultado) {
+      continue;
+    }
+
+    const aplicacion = resultado.aplicar(disponible);
+
+    detalle.push(aplicacion.fila);
+    disponible = aplicacion.restante;
   }
 
-  // Tras pasar por los 4 eslabones, `disponible` es lo que sobro (nunca
-  // negativo, porque cada eslabon solo consume el minimo entre lo
-  // disponible y lo que adeuda su rubro).
   const totalAplicadoADeuda = monto.restar(disponible);
 
+  let cuotaSaldada = true;
+
+  for (const fila of detalle) {
+    if (!fila.pendiente.esCero()) {
+      cuotaSaldada = false;
+      break;
+    }
+  }
+
   return {
-    detalle,
-    totalAplicadoADeuda,
-    excedente: disponible, // lo que sobro tras saldar todos los rubros (Escenario C)
-    cuotaSaldada: detalle.every((f) => f.pendiente.esCero()),
+    detalle: detalle,
+    totalAplicadoADeuda: totalAplicadoADeuda,
+    excedente: disponible,
+    cuotaSaldada: cuotaSaldada
   };
 }
 
-/**
- * Escenario C (seccion 6.6.5): el excedente que queda tras saldar la cuota
- * vencida se aplica a favor del cliente segun la politica de adelanto
- * (Strategy): a capital (recomendada) o a cuotas futuras.
- */
 export interface ResultadoExcedente {
   destino: DestinoExcedente;
   monto: Dinero;
 }
 
-export function aplicarExcedente(excedente: Dinero, destino: DestinoExcedente): ResultadoExcedente {
+export function aplicarExcedente(
+  excedente: Dinero,
+  destino: DestinoExcedente
+): ResultadoExcedente {
   if (excedente.esNegativo()) {
     throw new Error("El excedente no puede ser negativo");
   }
-  return { destino, monto: excedente };
+
+  return {
+    destino: destino,
+    monto: excedente
+  };
 }
