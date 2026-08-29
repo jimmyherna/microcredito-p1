@@ -4,8 +4,7 @@ info:
   version: "1.0.0"
   description: >
     Contrato de los casos de uso del nucleo hexagonal (Proyecto 1, E5).
-    Los esquemas se derivan de validadores Zod (seccion 8.2) y se comparten
-    con el futuro servidor MCP (Proyecto Final).
+    Los esquemas se derivan de validadores Zod y definen el contrato de entradas y salidas.
 servers:
   - url: https://api.creditovecino.example.com/v1
     description: Entorno de referencia (no implementado en el Proyecto 1)
@@ -13,7 +12,7 @@ servers:
 paths:
   /clientes:
     post:
-      summary: Registrar cliente
+      summary: Registrar un nuevo cliente (UC1)
       operationId: registrarCliente
       requestBody:
         required: true
@@ -21,12 +20,29 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/NuevoCliente" }
       responses:
-        "201": { description: Cliente creado, content: { application/json: { schema: { $ref: "#/components/schemas/Cliente" } } } }
+        "201":
+          description: Cliente creado exitosamente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cliente" }
         "400": { $ref: "#/components/responses/ErrorValidacion" }
+
+  /clientes/{id}:
+    get:
+      summary: Consultar un cliente por su ID (UC1)
+      operationId: consultarCliente
+      parameters: [ { $ref: "#/components/parameters/IdPath" } ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cliente" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
 
   /solicitudes:
     post:
-      summary: Solicitar credito
+      summary: Solicitar un nuevo credito (UC2)
       operationId: solicitarCredito
       requestBody:
         required: true
@@ -34,12 +50,16 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/NuevaSolicitudCredito" }
       responses:
-        "201": { description: Solicitud registrada, content: { application/json: { schema: { $ref: "#/components/schemas/SolicitudCredito" } } } }
+        "201":
+          description: Solicitud registrada exitosamente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SolicitudCredito" }
         "400": { $ref: "#/components/responses/ErrorValidacion" }
 
   /solicitudes/{id}/evaluar:
     post:
-      summary: Evaluar / aprobar o rechazar una solicitud
+      summary: Evaluar (aprobar o rechazar) una solicitud (UC3)
       operationId: evaluarSolicitud
       parameters: [ { $ref: "#/components/parameters/IdPath" } ]
       requestBody:
@@ -48,32 +68,64 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/DecisionComite" }
       responses:
-        "200": { description: Solicitud evaluada, content: { application/json: { schema: { $ref: "#/components/schemas/SolicitudCredito" } } } }
+        "200":
+          description: Solicitud evaluada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SolicitudCredito" }
         "404": { $ref: "#/components/responses/NoEncontrado" }
         "409": { $ref: "#/components/responses/TransicionInvalida" }
 
   /creditos/{id}/desembolsar:
     post:
-      summary: Desembolsar credito aprobado (genera el plan de amortizacion)
+      summary: Desembolsar un credito aprobado y generar plan de amortizacion (UC4)
       operationId: desembolsarCredito
       parameters: [ { $ref: "#/components/parameters/IdPath" } ]
       responses:
-        "200": { description: Credito desembolsado, content: { application/json: { schema: { $ref: "#/components/schemas/Credito" } } } }
+        "200":
+          description: Credito desembolsado exitosamente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Credito" }
         "404": { $ref: "#/components/responses/NoEncontrado" }
         "409": { $ref: "#/components/responses/TransicionInvalida" }
 
   /creditos/{id}:
     get:
-      summary: Consultar un credito (incluye plan, estado y tramo)
+      summary: Consultar un credito, su plan, estado y tramo de mora (UC4 / UC5)
       operationId: consultarCredito
       parameters: [ { $ref: "#/components/parameters/IdPath" } ]
       responses:
-        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Credito" } } } }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Credito" }
         "404": { $ref: "#/components/responses/NoEncontrado" }
+
+  /creditos/{id}/reestructurar:
+    post:
+      summary: Reestructurar un credito con atraso o mora (UC7)
+      operationId: reestructurarCredito
+      parameters: [ { $ref: "#/components/parameters/IdPath" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NuevaReestructuracion" }
+      responses:
+        "200":
+          description: Credito reestructurado exitosamente
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Credito" }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/TransicionInvalida" }
 
   /pagos:
     post:
-      summary: Registrar pago de cuota (aplica prelacion, seccion 6.6)
+      summary: Registrar pago de cuota aplicando prelacion de pagos (UC5)
       operationId: registrarPago
       requestBody:
         required: true
@@ -82,7 +134,7 @@ paths:
             schema: { $ref: "#/components/schemas/NuevoPago" }
       responses:
         "200":
-          description: Pago aplicado (o idempotentemente ya aplicado antes)
+          description: Pago aplicado exitosamente (o recuperado idempotentemente)
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ResultadoPago" }
@@ -90,22 +142,43 @@ paths:
         "404": { $ref: "#/components/responses/NoEncontrado" }
         "409": { $ref: "#/components/responses/TransicionInvalida" }
 
-  /cierres:
+  /cierres/diario:
     post:
-      summary: Generar cierre (diario o mensual) - idempotente por fecha de corte
-      operationId: generarCierre
+      summary: Ejecutar proceso de cierre diario (UC6)
+      operationId: ejecutarCierreDiario
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ComandoCierre" }
+            schema: { $ref: "#/components/schemas/ComandoCierreDiario" }
       responses:
-        "200": { description: Cierre generado o recuperado (idempotente), content: { application/json: { schema: { $ref: "#/components/schemas/Cierre" } } } }
+        "200":
+          description: Cierre diario procesado o recuperado (idempotente)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cierre" }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
+
+  /cierres/mensual:
+    post:
+      summary: Ejecutar proceso de cierre mensual (UC6)
+      operationId: ejecutarCierreMensual
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComandoCierreMensual" }
+      responses:
+        "200":
+          description: Cierre mensual procesado o recuperado (idempotente)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Cierre" }
         "400": { $ref: "#/components/responses/ErrorValidacion" }
 
   /cartera/en-riesgo:
     get:
-      summary: Consultar cartera en riesgo (seccion 6.8)
+      summary: Consultar reporte de cartera en riesgo (PAR) por fecha de corte (UC6)
       operationId: consultarCarteraEnRiesgo
       parameters:
         - name: fechaCorte
@@ -113,7 +186,12 @@ paths:
           required: true
           schema: { type: string, format: date }
       responses:
-        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/CarteraEnRiesgo" } } } }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CarteraEnRiesgo" }
+        "400": { $ref: "#/components/responses/ErrorValidacion" }
 
 components:
   parameters:
@@ -125,7 +203,7 @@ components:
 
   responses:
     ErrorValidacion:
-      description: Error de validacion de entrada (Zod)
+      description: Error de validacion de entrada de datos
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -136,8 +214,7 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
     TransicionInvalida:
       description: >
-        La operacion no es aplicable al estado actual del credito
-        (ErrorTransicionInvalida del nucleo de dominio).
+        La operacion no es aplicable al estado actual del credito o solicitud.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -153,7 +230,7 @@ components:
 
     Dinero:
       type: object
-      description: Serializacion de un Objeto de Valor Dinero. `centavos` es la fuente de verdad; `monto` es solo de lectura.
+      description: Objeto de valor Dinero. `centavos` es la fuente de verdad.
       required: [centavos, moneda]
       properties:
         centavos: { type: integer, example: 100462 }
@@ -164,9 +241,9 @@ components:
       type: object
       required: [nombre, dpi, direccion]
       properties:
-        nombre: { type: string }
-        dpi: { type: string, pattern: "^[0-9]{13}$" }
-        direccion: { type: string }
+        nombre: { type: string, example: "Juan Perez" }
+        dpi: { type: string, pattern: "^[0-9]{13}$", example: "1234567890101" }
+        direccion: { type: string, example: "Guatemala, Guatemala" }
 
     Cliente:
       allOf:
@@ -174,15 +251,15 @@ components:
         - type: object
           required: [id]
           properties:
-            id: { type: string }
+            id: { type: string, example: "cli-12345" }
 
     NuevaSolicitudCredito:
       type: object
       required: [clienteId, montoSolicitado, plazoMeses]
       properties:
-        clienteId: { type: string }
+        clienteId: { type: string, example: "cli-12345" }
         montoSolicitado: { $ref: "#/components/schemas/Dinero" }
-        plazoMeses: { type: integer, minimum: 3, maximum: 24 }
+        plazoMeses: { type: integer, minimum: 3, maximum: 24, example: 12 }
 
     SolicitudCredito:
       allOf:
@@ -190,44 +267,53 @@ components:
         - type: object
           required: [id, estado, fechaSolicitud]
           properties:
-            id: { type: string }
+            id: { type: string, example: "sol-98765" }
             estado: { type: string, enum: [SOLICITADO, APROBADO, RECHAZADO, ANULADO] }
-            fechaSolicitud: { type: string, format: date }
+            fechaSolicitud: { type: string, format: date, example: "2026-08-01" }
 
     DecisionComite:
       type: object
       required: [decision]
       properties:
         decision: { type: string, enum: [APRUEBA, RECHAZA] }
-        motivo: { type: string }
+        motivo: { type: string, example: "Cumple con perfil crediticio" }
+
+    NuevaReestructuracion:
+      type: object
+      required: [nuevoPlazoMeses, nuevaTasaMensual]
+      properties:
+        nuevoPlazoMeses: { type: integer, minimum: 3, maximum: 36, example: 18 }
+        nuevaTasaMensual: { type: number, example: 0.025 }
+        motivo: { type: string, example: "Capacidad de pago ajustada" }
 
     Credito:
       type: object
       required: [id, estado, capitalDesembolsado, tasaMensual, numeroCuotas]
       properties:
-        id: { type: string }
+        id: { type: string, example: "cre-55555" }
         estado:
           type: string
           enum: [SOLICITADO, APROBADO, RECHAZADO, ANULADO, VIGENTE, EN_MORA, REESTRUCTURADO, CANCELADO, INCOBRABLE]
         tramo:
           type: string
           enum: [AL_DIA, MORA_1, MORA_2, MORA_3, VENCIDO, INCOBRABLE]
-          description: Clasificacion derivada de los dias de atraso; no es el estado.
+          description: Clasificacion derivada de los dias de atraso.
         capitalDesembolsado: { $ref: "#/components/schemas/Dinero" }
         tasaMensual: { type: number, example: 0.03 }
         numeroCuotas: { type: integer, example: 12 }
-        politicaVersion: { type: string }
+        politicaVersion: { type: string, example: "2026.1" }
 
     NuevoPago:
       type: object
       required: [creditoId, monto, claveIdempotencia]
       properties:
-        creditoId: { type: string }
+        creditoId: { type: string, example: "cre-55555" }
         monto: { $ref: "#/components/schemas/Dinero" }
         claveIdempotencia:
           type: string
-          description: Reintentar el mismo pago con la misma clave no debe cobrar dos veces (invariante 6.10).
-        fecha: { type: string, format: date }
+          example: "pago-unique-uuid-123"
+          description: Evita doble cobro en reintentos.
+        fecha: { type: string, format: date, example: "2026-08-28" }
 
     DesgloseAplicacionRubro:
       type: object
@@ -248,12 +334,17 @@ components:
         nuevoEstado: { type: string }
         tramo: { type: string }
 
-    ComandoCierre:
+    ComandoCierreDiario:
       type: object
-      required: [tipo, fechaCorte]
+      required: [fechaCorte]
       properties:
-        tipo: { type: string, enum: [DIARIO, MENSUAL] }
-        fechaCorte: { type: string, format: date }
+        fechaCorte: { type: string, format: date, example: "2026-08-28" }
+
+    ComandoCierreMensual:
+      type: object
+      required: [fechaCorte]
+      properties:
+        fechaCorte: { type: string, format: date, example: "2026-08-31" }
 
     Cierre:
       type: object
