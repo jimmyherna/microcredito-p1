@@ -114,6 +114,7 @@ Se utilizó **Claude (Anthropic)** como apoyo en: la redacción inicial de los A
 pruebas unitarias y el script de prueba libre (`scripts/pruebas_credito.ts`), y la elaboración de los diagramas
 Mermaid a partir del enunciado. El diseño de arquitectura, la comprensión de cada regla de negocio y el código
 del núcleo de dominio fueron revisados por el equipo y son defendibles ante el catedrático.
+Se utilizó **Grok SpaceXAI** igualmente como apoyo en validación del entregable final.
 
 ## Marco de referencia citado
 
