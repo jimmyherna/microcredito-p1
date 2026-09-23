@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crédito Vecino — SGMC</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <h1>Crédito Vecino</h1>
+    <p>Sistema de Gestión de Microcrédito</p>
+
+    <label for="nombre">Nombre</label>
+    <input id="nombre" type="text" placeholder="Tu nombre" />
+
+    <label for="rol">Ingresar como</label>
+    <select id="rol">
+      <option value="ASESOR">Asesor de crédito</option>
+      <option value="CLIENTE">Cliente</option>
+      <option value="GERENCIA">Gerencia / Comité</option>
+    </select>
+
+    <button id="btnContinuar" class="primario">Continuar</button>
+  </main>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/login.js"></script>
+</body>
+</html>
