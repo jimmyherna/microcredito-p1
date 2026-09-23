@@ -1,0 +1,133 @@
+%% Diagrama de Clases del Dominio — Sistema de Gestion de Microcredito
+%% Abrir/editar en https://mermaid.live (pegar este codigo)
+classDiagram
+    class Cliente {
+        +String id
+        +String nombre
+        +String dpi
+        +String direccion
+        +registrar()
+    }
+
+    class SolicitudCredito {
+        +String id
+        +Dinero montoSolicitado
+        +Number plazoMeses
+        +DateTime fechaSolicitud
+        +evaluar() Boolean
+    }
+
+    class PoliticaCredito {
+        +String version
+        +Number tnaVigente
+        +Number tnaMoratoria
+        +String baseDeConteo
+        +String autor
+        +Date fechaVigenciaDesde
+    }
+
+    class Credito {
+        +String id
+        +Dinero capitalDesembolsado
+        +Number tasaMensual
+        +Number numeroCuotas
+        +EstadoCredito estado
+        +Date fechaDesembolso
+        +String politicaVersion
+        +desembolsar()
+        +registrarPago(pago) ResultadoAplicacionPago
+        +clasificarTramo() TramoMora
+    }
+
+    class PlanAmortizacion {
+        +Dinero capital
+        +Number tasaMensual
+        +Number numeroCuotas
+        +Cuota[] cuotas
+        +generar() PlanAmortizacion
+    }
+
+    class Cuota {
+        +Number numero
+        +Dinero saldoInicial
+        +Dinero montoCuota
+        +Dinero interes
+        +Dinero amortizacion
+        +Dinero saldoFinal
+        +Date fechaVencimiento
+        +Number diasDeAtraso
+        +TramoMora tramo
+    }
+
+    class Pago {
+        +String id
+        +Dinero monto
+        +Date fecha
+        +String claveIdempotencia
+        +aplicar(deuda) ResultadoAplicacionPago
+    }
+
+    class Movimiento {
+        +String id
+        +String tipo
+        +Dinero monto
+        +Date fecha
+        +String referenciaId
+    }
+
+    class Cierre {
+        +Date fechaCorte
+        +String tipo
+        +Dinero carteraActiva
+        +Dinero carteraEnRiesgo
+        +Number porcentajeEnRiesgo
+        +Dinero dadoPorIncobrableEnPeriodo
+        +ejecutar() Cierre
+    }
+
+    class Dinero {
+        <<Value Object>>
+        -Number centavos
+        -String moneda
+        +sumar(otro) Dinero
+        +restar(otro) Dinero
+        +multiplicarPorFactor(f) Dinero
+    }
+
+    class TramoMora {
+        <<enumeration>>
+        AL_DIA
+        MORA_1
+        MORA_2
+        MORA_3
+        VENCIDO
+        INCOBRABLE
+    }
+
+    class EstadoCredito {
+        <<enumeration>>
+        SOLICITADO
+        APROBADO
+        RECHAZADO
+        ANULADO
+        VIGENTE
+        EN_MORA
+        REESTRUCTURADO
+        CANCELADO
+        INCOBRABLE
+    }
+
+    Cliente "1" --> "0..*" SolicitudCredito : realiza
+    SolicitudCredito "1" --> "0..1" Credito : origina
+    SolicitudCredito --> PoliticaCredito : evaluada con
+    Credito "1" --> "1" PlanAmortizacion : tiene
+    Credito --> PoliticaCredito : calculado con (vigente al desembolso)
+    PlanAmortizacion "1" --> "1..*" Cuota : contiene
+    Credito "1" --> "0..*" Pago : recibe
+    Pago --> Movimiento : genera
+    Credito --> EstadoCredito : estado
+    Cuota --> TramoMora : clasificacion derivada
+    Credito "0..*" --> "0..*" Cierre : consolidado en
+    Credito --> Dinero : usa
+    Cuota --> Dinero : usa
+    Pago --> Dinero : usa
