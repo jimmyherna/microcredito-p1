@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalle y mora — SGMC</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/nav.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <p>Crédito <span id="idCredito"></span></p>
+    <h1>Detalle y mora</h1>
+
+    <p><span class="etiqueta-mora en-mora" id="etiquetaTramo"></span></p>
+
+    <div class="tarjeta">
+      <p>Saldo de capital en mora: <strong id="capitalEnMora"></strong></p>
+      <p>Días de atraso: <strong id="diasAtraso"></strong></p>
+      <p>Interés moratorio acumulado: <strong id="interesMoratorio"></strong></p>
+    </div>
+
+    <a href="#" id="linkRegistrarPago">
+      <button class="primario">Registrar pago</button>
+    </a>
+    <a href="/paginas/plan-amortizacion.html">
+      <button class="secundario">Ver plan de amortización</button>
+    </a>
+  </main>
+
+  <nav class="nav-inferior">
+    <a href="/paginas/solicitud-credito.html">Solicitar</a>
+    <a href="/paginas/menu.html">Mi cartera</a>
+    <a href="/paginas/registrar-pago.html">Pagar</a>
+    <a href="/paginas/plan-amortizacion.html">Plan</a>
+  </nav>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/detalle-mora.js"></script>
+</body>
+</html>

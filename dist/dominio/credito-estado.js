@@ -1,0 +1,63 @@
+/**
+ * Ciclo de vida del credito (seccion 6.7). El ESTADO es un hecho o decision
+ * que no se recalcula (aprobado, incobrable...); el TRAMO de mora (Mora 1..
+ * Vencido) NO es un estado, es una clasificacion derivada de los dias de
+ * atraso (ver calculadora-mora.ts::clasificarTramoMora). Confundirlos
+ * duplicaria la fuente de verdad (seccion 6.7.1).
+ *
+ * Se implementa como patron State (GoF): las transiciones invalidas son
+ * imposibles por diseño (se rechazan explicitamente), no evitadas con un
+ * `if` disperso por el codigo cliente.
+ */
+export class ErrorTransicionInvalida extends Error {
+    constructor(estado, evento) {
+        super(`Transicion invalida: el evento '${evento}' no es aplicable en el estado '${estado}'`);
+        this.name = "ErrorTransicionInvalida";
+    }
+}
+/** Tabla de transiciones — contrato obligatorio de la seccion 6.7.1. */
+const TABLA_TRANSICIONES = [
+    { desde: "SOLICITADO", evento: "COMITE_APRUEBA", guarda: (c) => c.cumplePoliticaCredito === true, hasta: "APROBADO" },
+    { desde: "SOLICITADO", evento: "COMITE_RECHAZA", hasta: "RECHAZADO" },
+    { desde: "APROBADO", evento: "SE_DESEMBOLSA", hasta: "VIGENTE" },
+    { desde: "APROBADO", evento: "CLIENTE_DESISTE_O_EXPIRA", hasta: "ANULADO" },
+    { desde: "VIGENTE", evento: "VENCE_CUOTA_IMPAGADA", guarda: (c) => (c.diasDeAtraso ?? 0) >= 1, hasta: "EN_MORA" },
+    { desde: "VIGENTE", evento: "PAGA_ULTIMA_CUOTA", guarda: (c) => c.saldoRestante === 0, hasta: "CANCELADO" },
+    { desde: "EN_MORA", evento: "PAGA_TODO_LO_VENCIDO", guarda: (c) => (c.diasDeAtraso ?? -1) === 0, hasta: "VIGENTE" },
+    { desde: "EN_MORA", evento: "PAGA_PARTE_DE_LO_VENCIDO", guarda: (c) => (c.diasDeAtraso ?? 0) > 0, hasta: "EN_MORA" },
+    { desde: "EN_MORA", evento: "VENCE_CUOTA_IMPAGADA", guarda: (c) => (c.diasDeAtraso ?? 0) >= 1, hasta: "EN_MORA" },
+    { desde: "EN_MORA", evento: "ACUERDA_NUEVAS_CONDICIONES", guarda: (c) => c.comiteAutoriza === true, hasta: "REESTRUCTURADO" },
+    { desde: "EN_MORA", evento: "SUPERA_120_DIAS_SIN_ARREGLO", guarda: (c) => (c.diasDeAtraso ?? 0) > 120, hasta: "INCOBRABLE" },
+    { desde: "REESTRUCTURADO", evento: "VENCE_CUOTA_IMPAGADA", guarda: (c) => (c.diasDeAtraso ?? 0) >= 1, hasta: "EN_MORA" },
+    { desde: "REESTRUCTURADO", evento: "PAGA_ULTIMA_CUOTA", guarda: (c) => c.saldoRestante === 0, hasta: "CANCELADO" },
+    // Tabla 6.7.1: "reestructurado -> cumple su nuevo plan al día -> vigente (sigue marcado en riesgo)".
+    // La transición es operativa, no estadística: el crédito vuelve a VIGENTE, pero
+    // el flag `reestructurado` en CreditoParaCartera (cartera.ts) no se borra, así
+    // que sigue contando en la cartera en riesgo aunque el estado ya no lo diga.
+    { desde: "REESTRUCTURADO", evento: "CUMPLE_NUEVO_PLAN_AL_DIA", guarda: (c) => (c.diasDeAtraso ?? 0) === 0, hasta: "VIGENTE" },
+    { desde: "INCOBRABLE", evento: "RECUPERACION_VIA_CASA_DE_COBRO", hasta: "INCOBRABLE" },
+];
+/**
+ * Aplica un evento al estado actual del credito. Lanza ErrorTransicionInvalida
+ * si el evento no esta permitido desde ese estado o si su guarda no se cumple
+ * (p. ej. pagar un credito 'SOLICITADO', o pretender regularizar con dias de
+ * atraso > 0).
+ */
+export function aplicarEvento(estadoActual, evento, contexto = {}) {
+    const candidatas = TABLA_TRANSICIONES.filter((t) => t.desde === estadoActual && t.evento === evento);
+    for (const t of candidatas) {
+        if (!t.guarda || t.guarda(contexto)) {
+            return t.hasta;
+        }
+    }
+    throw new ErrorTransicionInvalida(estadoActual, evento);
+}
+export const ESTADOS_TERMINALES = new Set([
+    "RECHAZADO",
+    "ANULADO",
+    "CANCELADO",
+]);
+/** Un pago solo puede aplicarse si el credito ya tiene capital entregado y no esta cancelado/incobrable en firme. */
+export function admitePago(estado) {
+    return estado === "VIGENTE" || estado === "EN_MORA" || estado === "REESTRUCTURADO";
+}

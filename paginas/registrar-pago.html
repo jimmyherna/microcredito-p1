@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registrar pago — SGMC</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/nav.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <p>Cobro en campo — <span id="idCredito"></span></p>
+    <h1>Registrar pago</h1>
+
+    <label for="monto">Monto recibido</label>
+    <input id="monto" type="number" inputmode="decimal" step="0.01" />
+
+    <div id="desglose"></div>
+
+    <button id="btnConfirmar" class="primario">Confirmar pago</button>
+    <p id="estado"></p>
+  </main>
+
+  <nav class="nav-inferior">
+    <a href="/paginas/solicitud-credito.html">Solicitar</a>
+    <a href="/paginas/menu.html">Mi cartera</a>
+    <a href="/paginas/registrar-pago.html" class="activo">Pagar</a>
+    <a href="/paginas/plan-amortizacion.html">Plan</a>
+  </nav>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/registrar-pago.js"></script>
+</body>
+</html>

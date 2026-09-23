@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nueva operación — SGMC</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/nav.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <p>Nueva Operación</p>
+    <h1>Solicitud de Crédito</h1>
+
+    <label for="cliente">Nombre del cliente</label>
+    <input id="cliente" type="text" />
+
+    <label for="monto">Monto solicitado (Q)</label>
+    <input id="monto" type="number" inputmode="decimal" step="0.01" />
+
+    <label for="plazo">Plazo (meses)</label>
+    <input id="plazo" type="number" inputmode="numeric" />
+
+    <div class="tarjeta" id="simulacion" style="display:none">
+      <strong>Simulación (Sistema francés)</strong>
+      <p id="cuotaMensual" style="font-size:1.4rem; margin:0.3rem 0"></p>
+      <p>Tasa nominal anual: <span id="tasaAnual"></span></p>
+    </div>
+
+    <button id="btnConfirmar" class="primario">Confirmar y enviar a comité</button>
+    <p id="estado"></p>
+  </main>
+
+  <nav class="nav-inferior">
+    <a href="/paginas/solicitud-credito.html" class="activo">Solicitar</a>
+    <a href="/paginas/menu.html">Mi cartera</a>
+    <a href="/paginas/registrar-pago.html">Pagar</a>
+    <a href="/paginas/plan-amortizacion.html">Plan</a>
+  </nav>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/solicitud-credito.js"></script>
+</body>
+</html>
