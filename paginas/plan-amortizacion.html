@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plan de amortización — SGMC</title>
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/nav.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <header class="topbar">
+      <button class="volver" onclick="history.back()" aria-label="Regresar">←</button>
+      <h1>Plan — <span id="idCredito"></span></h1>
+    </header>
+    <table>
+      <thead><tr><th>#</th><th>Cuota</th><th>Interés</th><th>Amort.</th><th>Saldo</th></tr></thead>
+      <tbody id="cuerpoTabla"></tbody>
+    </table>
+  </main>
+
+  <nav class="nav-inferior">
+    <a href="/paginas/solicitud-credito.html">Solicitar</a>
+    <a href="/paginas/menu.html">Mi cartera</a>
+    <a href="/paginas/registrar-pago.html">Pagar</a>
+    <a href="/paginas/plan-amortizacion.html" class="activo">Plan</a>
+  </nav>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/plan-amortizacion.js"></script>
+</body>
+</html>
