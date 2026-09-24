@@ -1,0 +1,21 @@
+%% Diagrama de Actividades — Flujo del cierre mensual (Template Method, seccion 9)
+%% Abrir/editar en https://mermaid.live (pegar este codigo)
+flowchart TD
+    Inicio([Inicio: fecha de corte]) --> A[Verificar idempotencia: existe cierre para este periodo?]
+    A -->|Si, ya existe| Z1([Fin: devolver cierre existente sin duplicar])
+    A -->|No| B[Congelar movimientos hasta la fecha de corte]
+    B --> C[Recorrer creditos activos]
+    C --> D[Clasificar tramo de mora por credito]
+    D --> E[Calcular interes devengado del periodo]
+    E --> F[Calcular cartera activa y cartera en riesgo]
+    F --> G[Calcular lo dado por incobrable en el periodo]
+    G --> H[Calcular provisiones segun clasificacion de riesgo]
+    H --> I[Consolidar totales del cierre]
+    I --> J[Persistir Cierre con fecha de corte]
+    J --> Z2([Fin: reporte de cierre])
+
+    subgraph Template Method
+        direction LR
+        note1[Cierre diario: mismos pasos B-C-D-E-F,\nsin consolidar provisiones ni tramos por cartera]
+        note2[Cierre mensual: todos los pasos,\nincluye provisiones y cartera en riesgo por tramo]
+    end

@@ -1,0 +1,39 @@
+%% Diagrama de Estados — Ciclo de vida del credito (tabla 6.7.1 completa)
+%% Abrir/editar en https://mermaid.live (pegar este codigo)
+%% NOTA: los tramos de mora (Mora1..Vencido) NO son estados; son una
+%% clasificacion derivada de diasDeAtraso dentro del estado EN_MORA (seccion 6.7).
+stateDiagram-v2
+    [*] --> SOLICITADO
+
+    SOLICITADO --> APROBADO : comite aprueba [cumple politica]
+    SOLICITADO --> RECHAZADO : comite rechaza
+    RECHAZADO --> [*]
+
+    APROBADO --> VIGENTE : se desembolsa [capital entregado]
+    APROBADO --> ANULADO : cliente desiste / expira [antes del desembolso]
+    ANULADO --> [*]
+
+    VIGENTE --> EN_MORA : vence cuota impagada [diasAtraso >= 1]
+    VIGENTE --> CANCELADO : paga ultima cuota [saldo = 0.00 exacto]
+
+    EN_MORA --> VIGENTE : paga TODO lo vencido [diasAtraso = 0] (regularizacion)
+    EN_MORA --> EN_MORA : paga PARTE de lo vencido [baja tramo, diasAtraso > 0]
+    EN_MORA --> EN_MORA : sube de tramo por mas atraso [hasta 120 dias]
+    EN_MORA --> REESTRUCTURADO : acuerdo de nuevas condiciones [comite autoriza]
+    EN_MORA --> INCOBRABLE : supera 120 dias sin arreglo [diasAtraso > 120]
+
+    REESTRUCTURADO --> EN_MORA : se atrasa en el nuevo plan [diasAtraso >= 1]
+    REESTRUCTURADO --> CANCELADO : paga la ultima cuota nueva [saldo = 0.00 exacto]
+    REESTRUCTURADO --> REESTRUCTURADO : cumple su nuevo plan al dia [sigue marcado en riesgo]
+
+    CANCELADO --> [*]
+
+    INCOBRABLE --> INCOBRABLE : cliente paga via casa de cobro [se registra como recuperacion, NO regresa a cartera]
+    INCOBRABLE --> [*]
+
+    note right of EN_MORA
+        Tramo (derivado de diasDeAtraso):
+        Mora1 1-30 | Mora2 31-60
+        Mora3 61-90 | Vencido 91-120
+        Sube si no paga, baja si paga.
+    end note

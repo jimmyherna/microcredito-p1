@@ -1,0 +1,28 @@
+%% C4 Modelo — Nivel 2: Contenedores
+%% Abrir/editar en https://mermaid.live (pegar este codigo)
+%% Muestra explicitamente donde se conectaran el servidor MCP y el chat (Proyecto Final).
+C4Container
+    title Sistema de Gestion de Microcredito — Contenedores (C4 Nivel 2)
+
+    Person(asesor, "Asesor de credito")
+    Person(gerencia, "Gerencia")
+
+    System_Boundary(sgm, "Sistema de Gestion de Microcredito") {
+        Container(webApp, "Aplicacion Web (React)", "React + Vite + Tailwind", "UI — Proyecto 2")
+        Container(api, "API REST", "Node.js / Express o Fastify", "Adaptador primario — expone los casos de uso (Proyecto Final)")
+        Container(mcp, "Servidor MCP", "@modelcontextprotocol/sdk", "Adaptador primario nuevo — Proyecto Final. Invoca los MISMOS puertos que la API")
+        Container(chat, "Asistente conversacional (RAG)", "LangChain.js / LlamaIndex.TS", "Adaptador primario nuevo — Proyecto Final")
+        Container(nucleo, "Nucleo de Dominio", "TypeScript (puro)", "Dinero, Credito, PlanAmortizacion, CalculadoraMora, Cartera — ENTREGADO EN EL PROYECTO 1 (E4)")
+        ContainerDb(db, "Base de datos", "PostgreSQL + pgvector", "Persistencia y vectores (Proyecto Final)")
+    }
+
+    Rel(asesor, webApp, "Usa", "HTTPS")
+    Rel(gerencia, webApp, "Usa", "HTTPS")
+    Rel(webApp, api, "Llama", "JSON/HTTPS")
+    Rel(api, nucleo, "Invoca puertos primarios (casos de uso)")
+    Rel(mcp, nucleo, "Invoca los MISMOS puertos primarios", "MCP tools")
+    Rel(chat, mcp, "Consulta herramientas")
+    Rel(nucleo, db, "Persiste via Repository (puerto secundario)", "SQL")
+
+    UpdateRelStyle(mcp, nucleo, $textColor="green", $lineColor="green")
+    UpdateRelStyle(api, nucleo, $textColor="green", $lineColor="green")
