@@ -3,42 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mi cartera — SGMC</title>
-  <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/nav.css" />
+  <title>Inicio — SGMC</title>
   <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="stylesheet" href="/css/base.css" />
 </head>
 <body>
   <main class="pantalla">
-    <p>Hoy</p>
-    <h1>Mi cartera</h1>
+    <header class="topbar">
+      <button class="volver" onclick="window.location.href='../index.html'" aria-label="Salir" style="font-size:0.95rem;">Salir</button>      <h1>Crédito Vecino</h1>
+    </header>
 
-    <div class="tarjeta">
-      <strong>Marta Xicará</strong> — Abarrotes La Bendición<br />
-      <span class="etiqueta-mora en-mora">45 días de atraso</span>
-      <div style="margin-top:0.5rem">
-        <a href="/paginas/detalle-mora.html?id=CV-2026-0410">Ver detalle</a> ·
-        <a href="/paginas/registrar-pago.html?id=CV-2026-0410">Cobrar</a>
-      </div>
-    </div>
+    <p id="saludo" style="text-align:center; color:var(--color-texto-suave); margin-top:1.5rem;"></p>
 
-    <div class="tarjeta">
-      <strong>Juan Pérez</strong> — Ferretería El Tornillo<br />
-      <span class="etiqueta-mora al-dia">Al día</span>
-      <div style="margin-top:0.5rem">
-        <a href="/paginas/detalle-mora.html?id=CV-2026-0177">Ver detalle</a> ·
-        <a href="/paginas/registrar-pago.html?id=CV-2026-0177">Cobrar</a>
-      </div>
+    <div class="acciones-centrales">
+      <button id="btnSolicitar" class="accion-grande accion-primaria">
+        <span class="accion-icono">＋</span>
+        Solicitar un crédito
+      </button>
+      <button id="btnPagar" class="accion-grande">
+        <span class="accion-icono">Q</span>
+        Pagar mi crédito
+      </button>
+      <button id="btnVer" class="accion-grande">
+        <span class="accion-icono">▤</span>
+        Ver mis créditos
+      </button>
     </div>
   </main>
 
-  <nav class="nav-inferior">
-    <a href="/paginas/solicitud-credito.html">Solicitar</a>
-    <a href="/paginas/menu.html" class="activo">Mi cartera</a>
-    <a href="/paginas/registrar-pago.html">Pagar</a>
-    <a href="/paginas/plan-amortizacion.html">Plan</a>
-  </nav>
-
   <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/inicio-cliente.js"></script>
 </body>
 </html>

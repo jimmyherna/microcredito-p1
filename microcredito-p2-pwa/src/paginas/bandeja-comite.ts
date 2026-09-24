@@ -4,6 +4,7 @@ import { generarPlanAmortizacionFrances } from "../dominio/plan-amortizacion.js"
 import { calcularCarteraEnRiesgo, formatearPorcentaje, type CreditoParaCartera } from "../dominio/cartera.js";
 import { obtenerSolicitudes, actualizarEstadoSolicitud, type SolicitudCredito } from "../almacen/solicitudes.js";
 import { obtenerCreditos, guardarCredito, calcularDiasDeAtraso } from "../almacen/creditos.js";
+import { obtenerResenas, calcularPromedio } from "../almacen/resenas.js";
 import { inicializarAyuda } from "../ayuda.js";
 
 function cumplePoliticaCredito(s: SolicitudCredito): boolean {
@@ -53,13 +54,17 @@ function renderizarHistorial(): void {
   contenedor.innerHTML = decididas.length === 0
     ? "<p>Todavía no se ha decidido ninguna solicitud.</p>"
     : decididas
-        .map(
-          (s) => `
+        .map((s) => {
+          const linkDetalle = s.estado === "APROBADO"
+            ? `<div style="margin-top:0.4rem"><a href="/paginas/detalle-mora.html?id=${encodeURIComponent(s.id)}">Ver estado actual del crédito</a></div>`
+            : "";
+          return `
           <div class="tarjeta">
             <strong>${s.id}</strong> — ${s.clienteNombre} —
             <span class="etiqueta-mora ${s.estado === "APROBADO" ? "al-dia" : "en-mora"}">${s.estado}</span>
-          </div>`
-        )
+            ${linkDetalle}
+          </div>`;
+        })
         .join("");
 }
 
@@ -115,7 +120,35 @@ function renderizarCarteraEnRiesgo(): void {
     <p style="font-size:0.85rem; color:var(--color-texto-suave)">Basado en ${creditos.length} crédito(s) aprobado(s).</p>`;
 }
 
+function renderizarOpiniones(): void {
+  const contenedor = document.getElementById("opiniones") as HTMLDivElement;
+  const resenas = obtenerResenas();
+
+  if (resenas.length === 0) {
+    contenedor.innerHTML = "<p>Todavía no hay calificaciones de usuarios.</p>";
+    return;
+  }
+
+  const promedio = calcularPromedio().toFixed(1);
+  contenedor.innerHTML = `
+    <div class="tarjeta">
+      <strong>Promedio: ${promedio} / 5 ★</strong> (${resenas.length} opinión/es)
+    </div>
+    ${resenas
+      .slice()
+      .reverse()
+      .map(
+        (r) => `
+        <div class="tarjeta">
+          ${"★".repeat(r.estrellas)}${"☆".repeat(5 - r.estrellas)} — ${r.nombre} (${r.rol})
+          ${r.comentario ? `<p style="margin-top:0.4rem">${r.comentario}</p>` : ""}
+        </div>`
+      )
+      .join("")}`;
+}
+
 renderizarSolicitudes();
 renderizarCarteraEnRiesgo();
+renderizarOpiniones();
 
-inicializarAyuda("Aquí decides las solicitudes pendientes. Al aprobar, el crédito pasa a la cartera real y su riesgo se calcula con datos reales, no de ejemplo.");
+inicializarAyuda("Aquí decides las solicitudes pendientes, monitoreas el estado real de cada crédito aprobado y revisas las calificaciones que dejan los usuarios.");

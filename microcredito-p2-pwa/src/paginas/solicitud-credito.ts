@@ -2,6 +2,8 @@ import { Dinero } from "../dominio/dinero.js";
 import { generarPlanAmortizacionFrances } from "../dominio/plan-amortizacion.js";
 import { guardarSolicitud, generarIdSolicitud } from "../almacen/solicitudes.js";
 import { obtenerSesion } from "../almacen/cuentas.js";
+import { mostrarAccionesSiguientes } from "../navegacion.js";
+import { mostrarFormularioResena } from "../resena.js";
 import { inicializarAyuda } from "../ayuda.js";
 
 const TASA_ANUAL = 0.36;
@@ -58,6 +60,22 @@ btnConfirmar.addEventListener("click", () => {
   });
 
   parrafoEstado.textContent = "Solicitud enviada al comité. Quedará pendiente de aprobación.";
+  btnConfirmar.disabled = true;
+
+  // Botones distintos según quién solicitó: el cliente ve sus propias opciones,
+  // el asesor ve las suyas — no se mezclan.
+  if (sesion?.rol === "ASESOR") {
+    mostrarAccionesSiguientes("siguientesAcciones", [
+      { texto: "Volver a mi cartera", href: "/paginas/menu.html" },
+      { texto: "Registrar otra solicitud", href: "/paginas/solicitud-credito.html", estilo: "secundario" },
+    ]);
+  } else {
+    mostrarAccionesSiguientes("siguientesAcciones", [
+      { texto: "Ver mis créditos", href: "/paginas/mi-credito.html" },
+      { texto: "Volver al inicio", href: "/paginas/inicio-cliente.html", estilo: "secundario" },
+    ]);
+    mostrarFormularioResena("resenaContenedor");
+  }
 });
 
 [inputMonto, inputPlazo].forEach((el) => el.addEventListener("input", actualizarSimulacion));

@@ -4,11 +4,15 @@ import { guardarPagoPendiente, generarClaveIdempotencia } from "../almacen/cola-
 import { clasificarTramoMora, calcularInteresMoratorio, type PoliticaMora } from "../dominio/calculadora-mora.js";
 import { generarPlanAmortizacionFrances } from "../dominio/plan-amortizacion.js";
 import { obtenerCreditoPorId, calcularDiasDeAtraso, registrarCuotaPagada } from "../almacen/creditos.js";
+import { obtenerSesion } from "../almacen/cuentas.js";
+import { mostrarAccionesSiguientes } from "../navegacion.js";
+import { mostrarFormularioResena } from "../resena.js";
 import { inicializarAyuda } from "../ayuda.js";
 
 const parametros = new URLSearchParams(window.location.search);
 const idCredito = parametros.get("id") ?? "";
 const credito = obtenerCreditoPorId(idCredito);
+const sesion = obtenerSesion();
 
 const inputMonto = document.getElementById("monto") as HTMLInputElement;
 const divDesglose = document.getElementById("desglose") as HTMLDivElement;
@@ -40,12 +44,7 @@ if (!credito) {
     tramo === "AL_DIA" ? Dinero.deQuetzales(0) : calcularInteresMoratorio(capitalCuota, diasDeAtraso, POLITICA);
   const gastosGestion = diasDeAtraso > 30 ? Dinero.deQuetzales(25.0) : Dinero.deQuetzales(0);
 
-  const deudaActual: DeudaCuota = {
-    gastos: gastosGestion,
-    interesMoratorio,
-    interesCorriente,
-    capital: capitalCuota,
-  };
+  const deudaActual: DeudaCuota = { gastos: gastosGestion, interesMoratorio, interesCorriente, capital: capitalCuota };
 
   function mostrarDesglose(): void {
     const valor = parseFloat(inputMonto.value || "0");
@@ -74,6 +73,20 @@ if (!credito) {
     parrafoEstado.textContent = navigator.onLine
       ? "Pago registrado. Sincronizando..."
       : "Sin señal: el pago quedó guardado y se sincronizará cuando vuelva la conexión.";
+    btnConfirmar.disabled = true;
+
+    if (sesion?.rol === "ASESOR") {
+      mostrarAccionesSiguientes("siguientesAcciones", [
+        { texto: "Volver a mi cartera", href: "/paginas/menu.html" },
+        { texto: "Ver detalle del crédito", href: `/paginas/detalle-mora.html?id=${encodeURIComponent(credito.id)}`, estilo: "secundario" },
+      ]);
+    } else {
+      mostrarAccionesSiguientes("siguientesAcciones", [
+        { texto: "Ver plan de amortización", href: `/paginas/plan-amortizacion.html?id=${encodeURIComponent(credito.id)}` },
+        { texto: "Volver a mis créditos", href: "/paginas/mi-credito.html", estilo: "secundario" },
+      ]);
+      mostrarFormularioResena("resenaContenedor");
+    }
   });
 
   inputMonto.addEventListener("input", mostrarDesglose);

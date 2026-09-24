@@ -1,5 +1,5 @@
-const CACHE_SHELL = "sgmc-shell-v3";
-const CACHE_DATOS = "sgmc-datos-v3";
+const CACHE_SHELL = "sgmc-shell-v4";
+const CACHE_DATOS = "sgmc-datos-v4";
 
 const ARCHIVOS_SHELL = [
   "/index.html",

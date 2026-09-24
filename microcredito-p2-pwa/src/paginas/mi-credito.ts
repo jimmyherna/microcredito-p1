@@ -22,7 +22,8 @@ const listaHtml = misCreditos.length === 0
           </span>
           <div style="margin-top:0.6rem">
             <a href="/paginas/detalle-mora.html?id=${encodeURIComponent(c.id)}">Ver detalle</a> ·
-            <a href="/paginas/plan-amortizacion.html?id=${encodeURIComponent(c.id)}">Ver plan</a>
+            <a href="/paginas/plan-amortizacion.html?id=${encodeURIComponent(c.id)}">Ver plan</a> ·
+            <a href="/paginas/registrar-pago.html?id=${encodeURIComponent(c.id)}">Pagar</a>
           </div>
         </div>`;
       })
