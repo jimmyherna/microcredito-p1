@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bandeja del comité — SGMC</title>
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body>
+  <main class="pantalla">
+    <header class="topbar">
+      <button class="volver" onclick="window.location.href='/index.html'" aria-label="Salir">⎋</button>
+      <h1>Comité de Crédito</h1>
+    </header>
+
+    <h2 style="font-size:1.1rem;">Solicitudes pendientes</h2>
+    <div id="listaSolicitudes"></div>
+
+    <div class="tarjeta riesgo">
+      <strong>Cartera en riesgo — septiembre 2026</strong>
+      <div id="carteraRiesgo"></div>
+    </div>
+
+    <h2 style="margin-top:1.5rem; font-size:1.1rem;">Historial de decisiones</h2>
+    <div id="historial"></div>
+  </main>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/bandeja-comite.js"></script>
+</body>
+</html>

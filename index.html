@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crédito Vecino — SGMC</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/base.css" />
+</head>
+<body>
+  <main class="pantalla-login">
+    <div class="tarjeta-login">
+      <div class="marca-login">
+        <span class="logo-login">CV</span>
+        <div>
+          <h1>Crédito Vecino</h1>
+          <p>Sistema de Gestión de Microcrédito</p>
+        </div>
+      </div>
+
+      <div class="pestañas-login">
+        <button id="tabIngresar" class="pestaña activa" type="button">Iniciar sesión</button>
+        <button id="tabCrear" class="pestaña" type="button">Crear cuenta</button>
+      </div>
+
+      <form id="formIngresar">
+        <label for="nombreIngresar">Nombre de usuario</label>
+        <input id="nombreIngresar" type="text" required />
+        <label for="claveIngresar">Contraseña</label>
+        <input id="claveIngresar" type="password" required />
+        <button type="submit" class="primario">Iniciar sesión</button>
+        <p id="estadoIngresar" class="mensaje-form"></p>
+      </form>
+
+      <form id="formCrear" style="display:none">
+        <label for="nombreCrear">Nombre de usuario</label>
+        <input id="nombreCrear" type="text" required />
+        <label for="claveCrear">Contraseña</label>
+        <input id="claveCrear" type="password" required />
+        <label for="rolCrear">Tipo de cuenta</label>
+        <select id="rolCrear">
+          <option value="ASESOR">Asesor de crédito</option>
+          <option value="CLIENTE">Cliente</option>
+          <option value="GERENCIA">Gerencia / Comité</option>
+        </select>
+        <button type="submit" class="primario">Crear cuenta</button>
+        <p id="estadoCrear" class="mensaje-form"></p>
+      </form>
+    </div>
+  </main>
+
+  <script type="module" src="/dist/app.js"></script>
+  <script type="module" src="/dist/paginas/login.js"></script>
+</body>
+</html>

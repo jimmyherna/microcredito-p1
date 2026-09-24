@@ -1,0 +1,163 @@
+:root {
+  --color-fondo: #f3f6f6;
+  --color-superficie: #ffffff;
+  --color-oscuro: #0d3b3e;
+  --color-oscuro-claro: #17595e;
+  --color-acento: #d9552b;
+  --color-texto: #16211f;
+  --color-texto-suave: #5c6b6c;
+  --radio: 0.9rem;
+  --sombra: 0 4px 16px rgba(13, 59, 62, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  padding-bottom: 4.75rem;
+  line-height: 1.45;
+}
+
+.pantalla { padding: 0 1.1rem 1.1rem; max-width: 100%; }
+
+h1 { font-size: 1.45rem; margin: 0.2rem 0 0.9rem; font-weight: 800; letter-spacing: -0.01em; }
+
+label { display: block; margin-top: 0.9rem; font-weight: 600; font-size: 0.85rem; color: var(--color-texto-suave); }
+
+input, button, select {
+  width: 100%;
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radio);
+  border: 1.5px solid #dbe3e3;
+  margin-top: 0.35rem;
+  background: var(--color-superficie);
+}
+
+input:focus, select:focus { outline: 2px solid var(--color-oscuro-claro); outline-offset: 1px; border-color: var(--color-oscuro-claro); }
+
+button.primario {
+  background: var(--color-oscuro);
+  color: white;
+  border: none;
+  min-height: 52px;
+  margin-top: 1.2rem;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: var(--sombra);
+  transition: transform 0.06s ease;
+}
+button.primario:hover { background: var(--color-oscuro-claro); }
+button.primario:active { transform: scale(0.99); }
+
+button.secundario {
+  background: white;
+  color: var(--color-acento);
+  border: 1.5px solid var(--color-acento);
+  min-height: 52px;
+  font-weight: 700;
+}
+
+/* Login */
+.pantalla-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(160deg, var(--color-oscuro) 0%, var(--color-oscuro-claro) 55%, #1b6b70 100%);
+}
+.tarjeta-login {
+  background: var(--color-superficie);
+  border-radius: 1.25rem;
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.marca-login { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.5rem; }
+.marca-login h1 { font-size: 1.3rem; margin: 0; }
+.marca-login p { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--color-texto-suave); }
+.logo-login {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: var(--color-oscuro); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1rem; flex-shrink: 0;
+}
+.pestañas-login { display: flex; gap: 0.4rem; margin-bottom: 1rem; background: #eef2f2; padding: 0.3rem; border-radius: 0.7rem; }
+.pestaña {
+  flex: 1; border: none; background: transparent; margin: 0;
+  padding: 0.55rem; border-radius: 0.5rem; font-weight: 600; color: var(--color-texto-suave); cursor: pointer;
+}
+.pestaña.activa { background: white; color: var(--color-oscuro); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.mensaje-form { color: var(--color-acento); font-size: 0.85rem; margin-top: 0.7rem; min-height: 1em; }
+
+/* Barra superior con regresar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 -1.1rem 1.2rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--color-oscuro);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar button.volver {
+  background: transparent; border: none; color: white; font-size: 1.5rem;
+  width: auto; min-height: auto; padding: 0; margin: 0; cursor: pointer; line-height: 1;
+}
+.topbar h1 { margin: 0; font-size: 1.05rem; color: white; font-weight: 700; }
+
+/* Botones grandes centrados — pantalla del Cliente */
+.acciones-centrales { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 2rem; max-width: 380px; margin-left: auto; margin-right: auto; }
+.accion-grande {
+  display: flex; align-items: center; gap: 0.9rem;
+  background: white; border: 1.5px solid #dbe3e3;
+  border-radius: 1rem; padding: 1.1rem 1.2rem;
+  font-size: 1.05rem; font-weight: 700; color: var(--color-texto);
+  box-shadow: var(--sombra); cursor: pointer;
+}
+.accion-grande.accion-primaria { background: var(--color-oscuro); color: white; border: none; }
+.accion-icono {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(13,59,62,0.08); font-size: 1.2rem; flex-shrink: 0;
+}
+.accion-primaria .accion-icono { background: rgba(255,255,255,0.18); }
+
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; background: var(--color-superficie); border-radius: var(--radio); overflow: hidden; box-shadow: var(--sombra); }
+th, td { text-align: right; padding: 0.65rem; border-bottom: 1px solid #eef1f1; }
+th { background: var(--color-oscuro); color: white; font-weight: 600; }
+th:first-child, td:first-child { text-align: left; }
+
+.tarjeta { background: var(--color-superficie); border-radius: var(--radio); padding: 1.15rem; margin-top: 1rem; box-shadow: var(--sombra); border: 1px solid #edf1f1; }
+.tarjeta.riesgo { border-left: 4px solid var(--color-acento); }
+
+.etiqueta-mora { display: inline-block; padding: 0.28rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; }
+.etiqueta-mora.al-dia { background: #d7f0dc; color: #1f7a34; }
+.etiqueta-mora.en-mora { background: #fbe0d6; color: #a83e1a; }
+
+.boton-ayuda {
+  position: fixed; bottom: 4.75rem; right: 1rem; width: 48px; height: 48px; border-radius: 50%;
+  background: var(--color-acento); color: white; border: none; font-size: 1.2rem; font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.28); z-index: 40; cursor: pointer;
+}
+.panel-ayuda {
+  position: fixed; bottom: 5.9rem; right: 1rem; max-width: 270px; background: white; border-radius: var(--radio);
+  padding: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 40; font-size: 0.9rem;
+}
+.panel-ayuda.oculto { display: none; }
+.panel-ayuda button.cerrar-ayuda { margin-top: 0.6rem; min-height: 40px; }
+
+@media (min-width: 768px) {
+  .pantalla { max-width: 680px; margin: 0 auto; }
+  .topbar { margin: 0 calc(-50vw + 340px) 1.2rem; padding-left: calc(50vw - 340px + 1.1rem); padding-right: calc(50vw - 340px + 1.1rem); }
+}
+@media (min-width: 1024px) { .pantalla { max-width: 1000px; } }
