@@ -3,45 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nueva operación — SGMC</title>
-  <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/nav.css" />
+  <title>Solicitud de crédito — SGMC</title>
   <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="stylesheet" href="/css/base.css" />
 </head>
 <body>
+
+  <header class="topbar">
+    <button class="volver" onclick="history.back()" aria-label="Regresar">← Volver</button>
+    <h1>Solicitud de crédito</h1>
+    <a href="/paginas/menu.html" class="btn-menu-top">Ir al menú</a>
+  </header>
+
   <main class="pantalla">
-    <header class="topbar">
-      <button class="volver" onclick="history.back()" aria-label="Regresar">←</button>
-      <h1>Solicitud de Crédito</h1>
-    </header>
+    <form id="formSolicitud">
+      <label for="cliente">Cliente</label>
+      <input id="cliente" required />
 
-    <label for="cliente">Nombre del cliente</label>
-    <input id="cliente" type="text" />
+      <label for="monto">Monto (Q)</label>
+      <input id="monto" type="number" min="1000" max="25000" step="1" required />
 
-    <label for="monto">Monto solicitado (Q)</label>
-    <input id="monto" type="number" inputmode="decimal" step="0.01" />
+      <label for="plazo">Plazo (meses)</label>
+      <input id="plazo" type="number" min="3" max="24" step="1" required />
 
-    <label for="plazo">Plazo (meses)</label>
-    <input id="plazo" type="number" inputmode="numeric" />
+      <p id="estimacionCuota" style="font-weight: 600; color: var(--color-oscuro); margin-top: 1rem;"></p>
 
-    <div class="tarjeta" id="simulacion" style="display:none">
-      <strong>Simulación (Sistema francés)</strong>
-      <p id="cuotaMensual" style="font-size:1.4rem; margin:0.3rem 0"></p>
-      <p>Tasa nominal anual: <span id="tasaAnual"></span></p>
+      <button type="submit" class="primario">Enviar solicitud</button>
+    </form>
+
+    <!-- MENSAJES Y NOTIFICACIONES DE SCRIPT -->
+    <p id="mensajeEstado" style="margin-top: 1rem; font-weight: 600;"></p>
+    <div id="resultadoSolicitud" style="margin-top: 1rem;"></div>
+
+    <!-- BOTÓN Y PANEL DE AYUDA -->
+    <button id="btnAyuda" class="boton-ayuda" type="button" aria-label="Ayuda">?</button>
+    
+    <div id="panelAyuda" class="panel-ayuda oculto">
+      <p id="textoAyuda">Completa el monto y el plazo para ver la cuota estimada. Al confirmar, la solicitud queda pendiente de aprobación del comité.</p>
+      <button id="btnCerrarAyuda" class="secundario cerrar-ayuda" type="button">Entendido</button>
     </div>
-
-    <button id="btnConfirmar" class="primario">Confirmar y enviar a comité</button>
-    <p id="estado"></p>
-    <div id="siguientesAcciones"></div>
-    <div id="resenaContenedor"></div>
   </main>
-
-  <nav class="nav-inferior">
-    <a href="./solicitud-credito.html" class="activo">Solicitar</a>
-    <a href="./menu.html">Mi cartera</a>
-    <a href="./registrar-pago.html">Pagar</a>
-    <a href="./plan-amortizacion.html">Plan</a>
-  </nav>
 
   <script type="module" src="/dist/app.js"></script>
   <script type="module" src="/dist/paginas/solicitud-credito.js"></script>

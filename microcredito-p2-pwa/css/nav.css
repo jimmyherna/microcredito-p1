@@ -1,13 +1,65 @@
-.nav-inferior {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  display: flex;
-  justify-content: space-around;
-  background: white;
-  border-top: 1px solid #e3e7e7;
-  padding: 0.6rem 0;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
 }
 
-.nav-inferior a { text-decoration: none; color: #7a8a8b; font-size: 0.72rem; text-align: center; font-weight: 600; }
-.nav-inferior a.activo { color: var(--color-oscuro); }
+header.topbar,
+.topbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 56px !important;
+  padding: 0 1.5rem !important;
+  background-color: #0f3832 !important;
+  color: #ffffff !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+header.topbar .volver,
+.topbar .volver {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  min-width: 100px !important;
+  text-align: left !important;
+}
+
+header.topbar h1,
+.topbar h1 {
+  font-size: 1.15rem !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  flex: 1 !important;
+  font-weight: 600 !important;
+}
+
+header.topbar .btn-menu-top,
+.topbar .btn-menu-top {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-size: 0.85rem !important;
+  padding: 0.4rem 0.8rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 6px !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  min-width: 100px !important;
+  text-align: center !important;
+}
+
+main.pantalla {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}

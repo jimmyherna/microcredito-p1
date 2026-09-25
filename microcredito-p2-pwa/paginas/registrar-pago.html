@@ -6,32 +6,31 @@
   <title>Registrar pago — SGMC</title>
   <link rel="icon" href="/icons/icon-192.png" type="image/png" />
   <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/nav.css" />
 </head>
 <body>
+
+  <header class="topbar">
+    <button class="volver" onclick="history.back()" aria-label="Regresar">← Volver</button>
+    <h1>Registrar pago</h1>
+    <a href="/paginas/menu.html" class="btn-menu-top">Ir al menú</a>
+  </header>
+
   <main class="pantalla">
-    <header class="topbar">
-      <button class="volver" onclick="history.back()" aria-label="Regresar">←</button>
-      <h1>Registrar pago</h1>
-    </header>
+    <!-- TARJETA CON EL DETALLE DE LA CUOTA A PAGAR -->
+    <div id="infoCuota" class="tarjeta" style="margin-bottom: 1.25rem;">
+      <h3 style="margin: 0 0 0.5rem; font-size: 1.05rem;">Monto a pagar</h3>
+      <div id="detalleMontoPago">Cargando información del crédito...</div>
+    </div>
 
-    <label for="monto">Monto recibido</label>
-    <input id="monto" type="number" inputmode="decimal" step="0.01" />
+    <form id="formPago">
+      <label for="montoRecibido">Monto recibido (Q)</label>
+      <input id="montoRecibido" type="number" step="0.01" inputmode="decimal" placeholder="Q 0.00" required />
 
-    <div id="desglose"></div>
+      <button id="btnConfirmarPago" type="submit" class="primario">Confirmar pago</button>
+    </form>
 
-    <button id="btnConfirmar" class="primario">Confirmar pago</button>
-    <p id="estado"></p>
-    <div id="siguientesAcciones"></div>
-    <div id="resenaContenedor"></div>
+    <p id="estadoPago" style="margin-top: 1rem; font-weight: 600;"></p>
   </main>
-
-  <nav class="nav-inferior">
-    <a href="./solicitud-credito.html">Solicitar</a>
-    <a href="./menu.html">Mi cartera</a>
-    <a href="./registrar-pago.html" class="activo">Pagar</a>
-    <a href="./plan-amortizacion.html">Plan</a>
-  </nav>
 
   <script type="module" src="/dist/app.js"></script>
   <script type="module" src="/dist/paginas/registrar-pago.js"></script>

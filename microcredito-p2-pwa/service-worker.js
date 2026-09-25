@@ -1,60 +1,89 @@
-const CACHE_SHELL = "sgmc-shell-v4";
-const CACHE_DATOS = "sgmc-datos-v4";
+const CACHE_NAME = "sgmc-cache-v5";
 
-const ARCHIVOS_SHELL = [
-  "/index.html",
-  "/manifest.json",
-  "/css/base.css",
-  "/css/nav.css",
-  "/dist/app.js",
-  "/paginas/inicio-cliente.html",
-  "/paginas/mi-credito.html",
-  "/paginas/menu.html",
-  "/paginas/solicitud-credito.html",
-  "/paginas/plan-amortizacion.html",
-  "/paginas/detalle-mora.html",
-  "/paginas/registrar-pago.html",
-  "/paginas/bandeja-comite.html",
+const ARCHIVOS_A_CACHEAR = [
+"/",
+"/index.html",
+"/manifest.json",
+"/paginas/menu.html",
+"/paginas/inicio-cliente.html",
+"/paginas/registrar-pago.html",
+"/paginas/plan-amortizacion.html",
+"/paginas/detalle-mora.html",
+"/paginas/mi-credito.html",
+"/paginas/solicitud-credito.html",
+"/paginas/bandeja-comite.html",
+"/css/base.css",
+"/css/nav.css",
+"/icons/icon-192.png",
+"/icons/icon-512.png",
+"/dist/seguridad.js",
+"/dist/ayuda.js",
+"/dist/navegacion.js",
+"/dist/resena.js",
+"/dist/app.js",
+"/dist/dominio/cartera.js",
+"/dist/dominio/prelacion-pago.js",
+"/dist/dominio/calculadora-mora.js",
+"/dist/dominio/politicas.js",
+"/dist/dominio/plan-amortizacion.js",
+"/dist/dominio/dinero.js",
+"/dist/dominio/credito-estado.js",
+"/dist/almacen/cuentas.js",
+"/dist/almacen/cola-offline.js",
+"/dist/almacen/creditos.js",
+"/dist/almacen/resenas.js",
+"/dist/almacen/solicitudes.js",
+"/dist/paginas/login.js",
+"/dist/paginas/inicio-cliente.js",
+"/dist/paginas/mi-credito.js",
+"/dist/paginas/registrar-pago.js",
+"/dist/paginas/plan-amortizacion.js",
+"/dist/paginas/detalle-mora.js",
+"/dist/paginas/bandeja-comite.js",
+"/dist/paginas/solicitud-credito.js",
+"/dist/paginas/menu.js"
 ];
 
-self.addEventListener("install", (evento) => {
-  evento.waitUntil(
-    caches.open(CACHE_SHELL).then((cache) => cache.addAll(ARCHIVOS_SHELL))
-  );
+
+
+// Instalación e intercepción inmediata del Service Worker
+self.addEventListener("install", (event) => {
   self.skipWaiting();
-});
-
-self.addEventListener("activate", (evento) => {
-  evento.waitUntil(
-    caches.keys().then((nombres) =>
-      Promise.all(
-        nombres
-          .filter((n) => n !== CACHE_SHELL && n !== CACHE_DATOS)
-          .map((n) => caches.delete(n))
-      )
-    )
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ARCHIVOS_A_CACHEAR);
+    })
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (evento) => {
-  const peticion = evento.request;
+// Activación y eliminación de cachés obsoletas
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
 
-  if (ARCHIVOS_SHELL.some((ruta) => peticion.url.endsWith(ruta))) {
-    // CORRECCIÓN: fetch(peticion.url) — texto, NO fetch(peticion) el objeto.
-    evento.respondWith(
-      caches.match(peticion).then((respuesta) => respuesta || fetch(peticion.url))
-    );
-    return;
-  }
-
-  evento.respondWith(
-    fetch(peticion)
-      .then((respuesta) => {
-        const copia = respuesta.clone();
-        caches.open(CACHE_DATOS).then((cache) => cache.put(peticion, copia));
-        return respuesta;
+// Estrategia de red primero, cayendo a caché si no hay conexión
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((respuestaRed) => {
+        if (respuestaRed && respuestaRed.status === 200 && event.request.method === "GET") {
+          const respuestaClonada = respuestaRed.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, respuestaClonada);
+          });
+        }
+        return respuestaRed;
       })
-      .catch(() => caches.match(peticion))
+      .catch(() => caches.match(event.request))
   );
 });

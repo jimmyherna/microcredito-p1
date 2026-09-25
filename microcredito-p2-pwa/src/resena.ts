@@ -2,11 +2,12 @@ import { guardarResena } from "./almacen/resenas.js";
 import { obtenerSesion } from "./almacen/cuentas.js";
 
 export function mostrarFormularioResena(contenedorId: string): void {
-  if (sessionStorage.getItem("sgmc-resena-hecha")) return;
-
   const sesion = obtenerSesion();
   const contenedor = document.getElementById(contenedorId);
   if (!contenedor || !sesion) return;
+
+  const claveResena = `sgmc-resena-hecha:${sesion.nombre.toLocaleLowerCase()}`;
+  if (sessionStorage.getItem(claveResena)) return;
 
   let estrellasSeleccionadas = 0;
 
@@ -36,13 +37,17 @@ export function mostrarFormularioResena(contenedorId: string): void {
   div.querySelector("#btnEnviarResena")!.addEventListener("click", () => {
     if (estrellasSeleccionadas === 0) { alert("Selecciona al menos una estrella."); return; }
     const comentario = (div.querySelector("#comentarioResena") as HTMLTextAreaElement).value.trim();
+    if (comentario.length > 500) {
+      alert("El comentario no puede superar 500 caracteres.");
+      return;
+    }
     guardarResena({ nombre: sesion.nombre, rol: sesion.rol, estrellas: estrellasSeleccionadas, comentario, fecha: new Date().toISOString() });
-    sessionStorage.setItem("sgmc-resena-hecha", "1");
+    sessionStorage.setItem(claveResena, "1");
     div.remove();
   });
 
   div.querySelector("#btnOmitirResena")!.addEventListener("click", () => {
-    sessionStorage.setItem("sgmc-resena-hecha", "1");
+    sessionStorage.setItem(claveResena, "1");
     div.remove();
   });
 }
