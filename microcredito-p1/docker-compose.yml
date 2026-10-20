@@ -4,6 +4,7 @@ services:
   bd:
     image: pgvector/pgvector:pg16
     container_name: credito_vecino_bd
+    restart: unless-stopped
     environment:
       POSTGRES_USER: credito_vecino
       POSTGRES_PASSWORD: credito_vecino
@@ -21,6 +22,7 @@ services:
   backend:
     build: .
     container_name: credito_vecino_backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -36,6 +38,7 @@ services:
   frontend:
     build: ./web
     container_name: credito_vecino_frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
     volumes:
