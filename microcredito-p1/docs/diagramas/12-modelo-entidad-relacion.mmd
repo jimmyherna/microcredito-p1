@@ -1,0 +1,28 @@
+erDiagram
+    ASESORES ||--o{ CREDITOS : "atiende"
+    CLIENTES ||--o{ SOLICITUDES_CREDITO : "solicita"
+    CLIENTES ||--o{ CREDITOS : "recibe"
+    SOLICITUDES_CREDITO ||--o| CREDITOS : "se desembolsa en (1:1)"
+    POLITICAS_MORA ||--o{ CREDITOS : "rige la mora de"
+    POLITICAS_CREDITO ||--o{ CREDITOS : "fija rango de tasa de"
+    CREDITOS ||--o{ PAGOS : "recibe"
+    CIERRES }o--o{ CREDITOS : "resume (derivado)"
+    ASESORES ||--o{ CLIENTES : "da de alta"
+    CLIENTES ||--o| USUARIOS : "cuenta del cliente"
+    ASESORES ||--o| USUARIOS : "cuenta del asesor"
+    USUARIOS ||--o{ BITACORA : "genera"
+
+    ASESORES { text id PK  text nombre }
+    CLIENTES { text id PK  text nombre  text dpi UK  text telefono  text municipio  date fecha_alta  text asesor_id FK }
+    SOLICITUDES_CREDITO { text id PK  text cliente_id FK  bigint monto_centavos  int plazo_meses  text estado  date fecha_solicitud }
+    CREDITOS { text id PK  text cliente_id FK  text asesor_id FK  text solicitud_id FK_UK  text politica_id FK  text politica_credito_id FK  date fecha_desembolso  bigint capital_centavos  int plazo_meses  int tna_bps  numeric tasa_mensual  text estado  bool reestructurado }
+    USUARIOS { text id PK  text nombre  text identificador UK  text contrasena_hash  text rol  text cliente_id FK_UK  text asesor_id FK_UK  timestamptz creado_en  timestamptz ultimo_acceso }
+    BITACORA { bigint id PK  timestamptz fecha  text usuario_id FK  text usuario_nombre  text rol  text accion  text entidad  text entidad_id  text detalle }
+    PAGOS { text clave_idempotencia PK  text credito_id FK  date fecha  bigint monto_centavos  text canal }
+    POLITICAS_MORA { text id PK  text tipo  int tna_bps  date vigencia_desde  date vigencia_hasta  jsonb datos }
+    POLITICAS_CREDITO { text id PK  int tna_min_bps  int tna_max_bps  int tna_defecto_bps  bigint monto_min_centavos  bigint monto_max_centavos }
+    CIERRES { date fecha_corte PK  text tipo PK  bigint cartera_activa_centavos  bigint desembolsos_centavos }
+    PARAMETROS_GLOBALES { text clave PK  jsonb valor }
+    EVENTOS_CARGA { int seq PK  text tipo  jsonb payload  bool aplicado }
+    CARGA_META { text clave PK  text valor }
+    RAG_FRAGMENTOS { bigint id PK  text documento  int indice  text contenido  vector embedding }

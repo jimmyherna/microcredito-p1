@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Zonas seguras de iOS/Android para el shell instalado como PWA. */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow-x: hidden;
+}
+
+/* Números de dinero: SIEMPRE en Plex Mono con numerales tabulares — nunca
+   se calculan aquí, solo se formatean (la cifra viene de la API). */
+.cifra {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Foco visible siempre (accesibilidad, WCAG 2.2 §2.4.11) — nunca se quita el outline. */
+:focus-visible {
+  outline: 2px solid #15304d;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dos niveles de acción, como en el prototipo de Figma:
+     - "navy"   -> navegar, autenticar, avanzar de paso (Iniciar Sesión,
+                   Ingresar, Continuar, Confirmar solicitud).
+     - "negro"  -> cerrar una operación de dinero (Confirmar y Enviar,
+                   Aceptar y Guardar, Registrar un Pago). */
+.boton-primario {
+  @apply flex items-center justify-center gap-2 rounded-tarjeta bg-navy px-5 py-4 text-base font-semibold text-white shadow-tarjeta transition active:scale-[0.98] active:bg-navy-oscuro disabled:opacity-40 disabled:active:scale-100;
+}
+
+.boton-cta {
+  @apply flex items-center justify-center gap-2 rounded-tarjeta bg-negro px-5 py-4 text-base font-semibold text-white shadow-tarjeta transition active:scale-[0.98] active:bg-negro-oscuro disabled:opacity-40 disabled:active:scale-100;
+}
+
+.boton-secundario {
+  @apply flex items-center justify-center gap-2 rounded-tarjeta border border-linea bg-papel-alto px-5 py-4 text-base font-medium text-tinta transition active:scale-[0.98] disabled:opacity-40;
+}
+
+.boton-texto {
+  @apply flex items-center justify-center gap-1.5 px-2 py-2 text-sm font-medium text-navy underline-offset-4 transition active:opacity-60;
+}
+
+.tarjeta {
+  @apply rounded-tarjeta border border-linea bg-papel-alto p-4 shadow-tarjeta;
+}
+
+.etiqueta {
+  @apply text-sm text-tinta/60;
+}
+
+.campo {
+  @apply w-full rounded-lg border-0 bg-campo px-4 py-3 text-base text-tinta placeholder:text-tinta/40 ring-1 ring-inset ring-linea focus:ring-2 focus:ring-navy;
+}
+
+/* Botón del menú principal (Figma: "Hola, {nombre} ¿Qué deseas realizar hoy?") */
+.boton-menu {
+  @apply flex w-full items-center gap-3 rounded-tarjeta bg-navy px-5 py-4 text-left text-base font-semibold text-white shadow-tarjeta transition active:scale-[0.98] active:bg-navy-oscuro;
+}
+.boton-menu-secundario {
+  @apply flex w-full items-center gap-3 rounded-tarjeta bg-negro px-5 py-4 text-left text-base font-semibold text-white shadow-tarjeta transition active:scale-[0.98] active:bg-negro-oscuro;
+}
+
+/* ---- Mejoras de interfaz ---- */
+.boton-primario,
+.boton-cta,
+.boton-secundario,
+.boton-menu,
+.boton-menu-secundario {
+  min-height: 48px;
+}
+.boton-primario:disabled,
+.boton-cta:disabled,
+.boton-secundario:disabled {
+  cursor: not-allowed;
+}
+.boton-texto {
+  min-height: 44px;
+}
+
+/* Botón de ícono (barra superior): objetivo táctil de 44 px. */
+.boton-icono {
+  @apply relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-navy transition hover:bg-navy-claro active:bg-navy-claro;
+}
+
+.campo-error {
+  @apply !ring-2 !ring-mora;
+}
+
+.chip {
+  @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-linea bg-papel px-4 text-sm font-medium text-tinta transition active:scale-[0.97];
+}
+.chip[aria-pressed="true"] {
+  @apply border-navy bg-navy text-white;
+}
+
+/* Esqueleto de carga */
+@keyframes brillo {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.esqueleto {
+  background: linear-gradient(90deg, #eef1f5 25%, #f7f8fa 37%, #eef1f5 63%);
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease infinite;
+  border-radius: 0.6rem;
+}
+
+@keyframes entra {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast-entra, .pantalla-entra {
+  animation: entra 0.22s ease-out both;
+}
+
+@keyframes sube {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.hoja-entra { animation: sube 0.24s ease-out both; }
+
+@keyframes desliza {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.cajon-entra { animation: desliza 0.25s ease-out both; }
+
+.tabla-datos th { white-space: nowrap; }
+.tabla-datos td, .tabla-datos th { padding: 0.65rem 0.85rem; }
+
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }

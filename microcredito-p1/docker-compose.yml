@@ -1,0 +1,19 @@
+services:
+  bd:
+    image: pgvector/pgvector:pg16
+    container_name: credito_vecino_bd
+    environment:
+      POSTGRES_USER: credito_vecino
+      POSTGRES_PASSWORD: credito_vecino
+      POSTGRES_DB: credito_vecino
+    ports:
+      - "5433:5432"
+    volumes:
+      - credito_vecino_datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U credito_vecino -d credito_vecino"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  credito_vecino_datos:
