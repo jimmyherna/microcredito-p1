@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   bd:
     image: pgvector/pgvector:pg16
@@ -15,5 +17,32 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  backend:
+    build: .
+    container_name: credito_vecino_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgres://credito_vecino:credito_vecino@bd:5432/credito_vecino
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      bd:
+        condition: service_healthy
+
+  frontend:
+    build: ./web
+    container_name: credito_vecino_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
 volumes:
   credito_vecino_datos:
