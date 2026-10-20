@@ -27,13 +27,19 @@ export function registrarManejadorExpiracion(fn: (() => void) | null): void {
 async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   const cabeceras: Record<string, string> = { "Content-Type": "application/json" };
   if (tokenActual) cabeceras["Authorization"] = `Bearer ${tokenActual}`;
+
+  // URL base de la API: lee la variable de entorno o usa el puerto 3000 por defecto para Docker
+  const urlBase = (import.meta.env.VITE_API_URL as string) || "http://localhost:3000";
+
   let respuesta: Response;
   try {
-    respuesta = await fetch(`/api${ruta}`, { ...opciones, headers: cabeceras });
+    respuesta = await fetch(`${urlBase}/api${ruta}`, { ...opciones, headers: cabeceras });
   } catch {
     throw new ErrorApi("SIN_CONEXION", "No pudimos conectar con el servidor. Revisa tu conexión a internet e inténtalo de nuevo.");
   }
+
   const cuerpo = (await respuesta.json().catch(() => null)) as { codigo?: string; mensaje?: string; detalles?: Record<string, unknown> } | null;
+  
   if (!respuesta.ok) {
     const esAuth = ruta.startsWith("/auth/login") || ruta.startsWith("/auth/registro");
     if (respuesta.status === 401 && cuerpo?.codigo === "NO_AUTENTICADO" && tokenActual && !esAuth) {
@@ -42,6 +48,7 @@ async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T>
     const generico = respuesta.status >= 500 ? "El servidor tuvo un problema. Inténtalo de nuevo en un momento." : "Ocurrió un error inesperado.";
     throw new ErrorApi(cuerpo?.codigo ?? "ERROR_DESCONOCIDO", cuerpo?.mensaje ?? generico, cuerpo?.detalles, respuesta.status);
   }
+
   return cuerpo as T;
 }
 
