@@ -24,7 +24,7 @@ services:
     container_name: credito_vecino_backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - PORT=3000
       - DATABASE_URL=postgres://credito_vecino:credito_vecino@bd:5432/credito_vecino
