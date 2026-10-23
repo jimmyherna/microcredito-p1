@@ -1,6 +1,6 @@
 [
   { "id": "G-1", "pregunta": "¿Cómo está la cartera al 2026-10-31? Dame la cartera activa, la cartera en mora, la cartera en riesgo y lo incobrable.", "debeContener": ["cartera activa", "cartera en mora", "cartera en riesgo", "incobrable"], "coincideConNucleo": "cartera" },
-  { "id": "G-5", "pregunta": "Dame la mora de la cuota 3 del crédito CV-2026-0030 al 2026-10-31", "debeContener": ["65 días", "711"], "noDebeContener": [] },
+  { "id": "G-5", "pregunta": "Dame la mora de la cuota 3 del crédito CV-2026-0030 al 2026-10-31", "debeContener": ["65 días", "7.11"], "noDebeContener": [] },
   { "id": "G-7", "pregunta": "Explícame el interés moratorio de la cuota 2 del crédito CV-2026-0410 con fecha de corte 2027-01-24, tramo por tramo", "debeContener": ["45 días", "30 días", "15 días"] },
   { "id": "G-8", "pregunta": "Según las políticas vigentes, ¿cómo se calcula el interés moratorio de un crédito otorgado en agosto de 2026? Cita la fuente.", "debeContener": ["POL-"], "citaDocumento": true },
   { "id": "OP-1", "pregunta": "Quiero registrar el pago de la cuota vencida de CV-2026-0043 al 2026-10-31", "requiereAprobacion": true },

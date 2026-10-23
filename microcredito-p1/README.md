@@ -197,12 +197,23 @@ npm run dev                      # http://localhost:5173 — /api se reenvía a 
 ### 3. Servidor MCP (E3)
 
 ```bash
-npm run mcp                      # servidor MCP por stdio, mismas 8 capacidades que expone la API
+npm run mcp                      # servidor MCP por stdio: 9 herramientas (8 de solo lectura + registrar_pago con aprobación humana)
 ```
 
-Conéctenlo desde su cliente MCP de preferencia (Claude Desktop, el inspector oficial de MCP, o
-directamente desde el orquestador del chat una vez lo migren de reglas a LLM — ver el comentario al
-inicio de `src/chat/orquestador.ts`).
+Conéctenlo desde su cliente MCP de preferencia (Claude Desktop o el inspector oficial de MCP).
+
+| Herramienta MCP | Modo |
+|---|---|
+| `consultar_credito`, `calcular_deuda_cuota`, `explicar_mora`, `listar_creditos_en_mora`, `proximos_vencimientos`, `consultar_cartera`, `consultar_cierre`, `previsualizar_pago` | Solo lectura (8) |
+| `registrar_pago` | Escritura: exige `tokenAprobacion` emitido tras una aprobación humana (1 de 9) |
+
+Todas reciben la fecha de corte como parámetro (nunca leen el reloj del sistema) y validan sus entradas con Zod.
+
+**Relación entre el chat y el MCP.** El chat gerencial y el servidor MCP son dos adaptadores sobre los
+**mismos servicios de aplicación** (`src/aplicacion/`). El chat ofrece esas capacidades al modelo como
+herramientas de *function calling* (`src/chat/herramientas.ts`) llamando directamente a esos servicios;
+no abre una conexión stdio hacia el proceso del servidor MCP. Por eso una cifra es idéntica en el tablero,
+en el chat y en el MCP. El servidor MCP funciona de forma independiente y se prueba en `tests/mcp.test.ts`.
 
 ### 4. RAG (E4)
 
@@ -213,11 +224,34 @@ ollama pull nomic-embed-text
 npm run ingesta:rag
 ```
 
+#### Estrategia de RAG y embeddings (E4 / E7)
+
+| Etapa | Decisión | Dónde |
+|---|---|---|
+| Corpus | 7 documentos de `datos/corpus/*.md` (políticas, manual de producto, preguntas frecuentes y la nota de campo) | `src/rag/ingesta.ts` |
+| Fragmentación | Por párrafo (separador de línea en blanco), fusionando párrafos consecutivos hasta alcanzar al menos 200 caracteres. Los documentos son cortos y ya están estructurados en párrafos temáticos, así que no se necesita un divisor recursivo (p. ej. LangChain.js) | `fragmentarPorParrafos` |
+| Embeddings | `nomic-embed-text` servido localmente por Ollama, 768 dimensiones | `src/rag/embeddings.ts` |
+| Almacenamiento | Tabla `rag_fragmentos` (documento, índice, contenido, `embedding vector(768)`) con índice `ivfflat` de similitud coseno (`lists = 10`) | `src/persistencia/schema.sql` |
+| Re-ingesta | Idempotente: borra la tabla y vuelve a cargar todo | `npm run ingesta:rag` |
+| Recuperación | Los 3 fragmentos más cercanos por similitud coseno (`1 - distancia`), cada uno con su documento de origen | `src/rag/recuperar.ts` |
+| Citación | Cada fragmento conserva su documento; el orquestador adjunta las fuentes a la respuesta y el prompt exige nombrarlas | `src/chat/orquestador.ts` |
+| Nota de campo | `NOTA-CAMPO-07` se ingiere, pero se trata solo como dato: no se recupera como fuente de política salvo que la pregunta la nombre, y su contenido pasa por `neutralizarContenido` antes de llegar al modelo (OP-7) | `src/chat/neutralizar-contenido.ts` |
+| Respaldo | Si pgvector u Ollama no están disponibles, el chat busca por palabras clave en los archivos del corpus | `src/chat/busqueda-corpus.ts` |
+
+Para cambiar a `bge-m3` hay que ajustar la dimensión de la columna `vector(...)` y volver a indexar.
+
 ### 5. Pruebas
 
 ```bash
 npm test                         # suite completa: dominio (P1/P2) + aplicación (Proyecto Final)
 ```
+
+Las pruebas del cargador, del MCP, las evals y las Operaciones del Anexo A necesitan `CV_DATA_DIR`.
+Vitest no lee el archivo `.env`, por eso `vitest.config.ts` la define automáticamente apuntando a
+`datos/datos-proyecto-final` cuando existe (si ya la definiste en tu terminal, se respeta la tuya).
+Para indicarla a mano en PowerShell: `$env:CV_DATA_DIR="./datos/datos-proyecto-final"; npm test`.
+`tests/carga-sha.test.ts` comprueba que el cargador se detiene si el SHA-256 de `eventos.jsonl` o de
+`eventos.sha256` está alterado (trabaja sobre una copia temporal, nunca sobre el paquete original).
 
 ### Estado real de cada pieza (léanlo antes de grabar el video)
 
@@ -228,10 +262,10 @@ npm test                         # suite completa: dominio (P1/P2) + aplicación
 | API REST (`src/api/`) | Implementada, con autenticación por rol y alcance de datos en servidor (ver `tests/auth.test.ts` y `tests/aplicacion.test.ts`) |
 | Persistencia + cargador (`src/persistencia/`) | Implementado; falta correrlo contra un Postgres real del equipo |
 | Interfaz React/PWA (`web/`) | Implementada: las 7 pantallas, responsive móvil/escritorio, aprobación humana del pago |
-| Servidor MCP (`src/mcp/`) | Implementado con las 8 capacidades; falta probarlo con un cliente MCP real tras `npm install` |
-| RAG (`src/rag/`) | Implementado (ingesta + recuperación por pgvector); el chat todavía usa una versión ligera por palabras clave — ver siguiente fila |
-| Chat gerencial (`src/chat/orquestador.ts`) | MVP por reglas, ya conectado de punta a punta; **falta reemplazarlo por un LLM real (Ollama/Gemini/Groq) con function-calling** para cumplir el enunciado al 100% — el comentario al inicio del archivo explica exactamente qué cambiar |
-| Pruebas nuevas (`tests/aplicacion.test.ts`) | Escritas y verificadas manualmente con Node; no se pudieron correr con `vitest`/`tsx` en el entorno donde se generaron por un problema de binario nativo de esbuild ajeno al código — deberían correr normalmente en las máquinas del equipo tras `npm install` |
+| Servidor MCP (`src/mcp/`) | Implementado con 9 herramientas (8 de solo lectura + `registrar_pago`, que exige aprobación humana); probado con un cliente MCP en memoria en `tests/mcp.test.ts` |
+| RAG (`src/rag/`) | Implementado (ingesta + recuperación por pgvector, top-3 por similitud coseno); el chat lo usa mediante la herramienta `buscar_politica`, con respaldo por palabras clave si pgvector u Ollama no están disponibles |
+| Chat gerencial (`src/chat/orquestador.ts`) | Modelo local (Ollama, *function calling*) con respaldo por reglas si el modelo no responde; conectado de punta a punta con historial de sesión; `registrar_pago` no es herramienta del chat (ver más abajo) |
+| Pruebas (`npm test`) | Suite completa verificada con Vitest: 153 pruebas, incluyendo cargador (con SHA-256 alterado), MCP, evals y Operaciones del Anexo A |
 
 ## Instalar Ollama (chat con IA real, local)
 
