@@ -203,7 +203,7 @@ export function crearServidor(repo: RepositorioPuerto): Express {
       exigirRol(u, "gerencia");
       const decision = req.body?.decision;
       if (decision !== "APRUEBA" && decision !== "RECHAZA") throw new ErrorAplicacion("VALIDACION", "decision debe ser APRUEBA o RECHAZA");
-      const solicitud = await evaluarSolicitud(repo, req.params.id, decision, req.body.motivo);
+      const solicitud = await evaluarSolicitud(repo, param(req.params.id), decision, req.body.motivo);
       await bitacora(u, decision === "APRUEBA" ? "Solicitud aprobada" : "Solicitud rechazada", "solicitud", solicitud.id, req.body.motivo ? `Motivo: ${req.body.motivo}` : null);
       res.json(solicitud);
     })
@@ -212,7 +212,7 @@ export function crearServidor(repo: RepositorioPuerto): Express {
   app.get(
     "/api/solicitudes/:id",
     asincrono(async (req, res) => {
-      const s = await exigirSolicitud(repo, actor(req), req.params.id);
+      const s = await exigirSolicitud(repo, actor(req), param(req.params.id));
       const cliente = await repo.obtenerCliente(s.clienteId);
       const creditoVinculado = (await repo.listarCreditos()).find((c) => c.solicitudId === s.id);
       res.json({
@@ -250,13 +250,13 @@ export function crearServidor(repo: RepositorioPuerto): Express {
       if (typeof asesorId !== "string" || typeof fechaDesembolso !== "string" || !Number.isInteger(tnaBps)) {
         throw new ErrorAplicacion("VALIDACION", "asesorId, fechaDesembolso (AAAA-MM-DD) y tnaBps (entero) son obligatorios");
       }
-      await autorizarDesembolso(u, req.params.id, asesorId);
+      await autorizarDesembolso(u, param(req.params.id), asesorId);
       const asesores = await repo.listarAsesores();
       if (!asesores.some((a) => a.id === asesorId)) throw new ErrorAplicacion("VALIDACION", `El asesor ${asesorId} no existe`);
       if (typeof creditoId === "string" && creditoId && (await repo.obtenerCredito(creditoId))) {
         throw new ErrorAplicacion("VALIDACION", `Ya existe el crédito ${creditoId}`);
       }
-      const credito = await desembolsarCredito(repo, req.params.id, {
+      const credito = await desembolsarCredito(repo, param(req.params.id), {
         ...(typeof creditoId === "string" && creditoId ? { creditoId } : {}),
         asesorId,
         fechaDesembolso,
@@ -313,8 +313,8 @@ export function crearServidor(repo: RepositorioPuerto): Express {
       const u = actor(req);
       const body = { ...(req.body ?? {}) };
       if (u.rol === "asesor" && body.asesorId === undefined) body.asesorId = u.asesorId;
-      await autorizarDesembolso(u, req.params.solicitudId, body.asesorId);
-      const credito = await desembolsarCredito(repo, req.params.solicitudId, body);
+      await autorizarDesembolso(u, param(req.params.solicitudId), body.asesorId);
+      const credito = await desembolsarCredito(repo, param(req.params.solicitudId), body);
       await bitacoraDesembolso(u, credito);
       res.json(credito);
     })
@@ -348,42 +348,42 @@ export function crearServidor(repo: RepositorioPuerto): Express {
   app.get(
     "/api/creditos/:id",
     asincrono(async (req, res) => {
-      await exigirCredito(repo, actor(req), req.params.id);
+      await exigirCredito(repo, actor(req), param(req.params.id));
       const fechaCorte = fechaCorteDe(req);
-      res.json(await consultarCredito(repo, req.params.id, fechaCorte));
+      res.json(await consultarCredito(repo, param(req.params.id), fechaCorte));
     })
   );
 
   app.get(
     "/api/creditos/:id/deuda-exigible",
     asincrono(async (req, res) => {
-      await exigirCredito(repo, actor(req), req.params.id);
-      res.json(await consultarDeudaExigible(repo, req.params.id, fechaCorteDe(req)));
+      await exigirCredito(repo, actor(req), param(req.params.id));
+      res.json(await consultarDeudaExigible(repo, param(req.params.id), fechaCorteDe(req)));
     })
   );
 
   app.get(
     "/api/creditos/:id/mora",
     asincrono(async (req, res) => {
-      await exigirCredito(repo, actor(req), req.params.id);
+      await exigirCredito(repo, actor(req), param(req.params.id));
       const cuota = req.query["cuota"] ? Number(req.query["cuota"]) : undefined;
-      res.json(await explicarMora(repo, req.params.id, fechaCorteDe(req), cuota));
+      res.json(await explicarMora(repo, param(req.params.id), fechaCorteDe(req), cuota));
     })
   );
 
   app.get(
     "/api/creditos/:id/plan",
     asincrono(async (req, res) => {
-      await exigirCredito(repo, actor(req), req.params.id);
-      res.json(await consultarPlanAmortizacion(repo, req.params.id, fechaCorteDe(req)));
+      await exigirCredito(repo, actor(req), param(req.params.id));
+      res.json(await consultarPlanAmortizacion(repo, param(req.params.id), fechaCorteDe(req)));
     })
   );
 
   app.get(
     "/api/creditos/:id/pagos",
     asincrono(async (req, res) => {
-      await exigirCredito(repo, actor(req), req.params.id);
-      res.json(await listarHistorialDeCobros(repo, req.params.id));
+      await exigirCredito(repo, actor(req), param(req.params.id));
+      res.json(await listarHistorialDeCobros(repo, param(req.params.id)));
     })
   );
 
@@ -410,8 +410,8 @@ export function crearServidor(repo: RepositorioPuerto): Express {
     asincrono(async (req, res) => {
       const u = actor(req);
       exigirRol(u, "asesor", "gerencia");
-      await exigirCredito(repo, u, req.params.creditoId);
-      res.json(await previsualizarPago(repo, req.params.creditoId, fechaCorteDe(req)));
+      await exigirCredito(repo, u, param(req.params.creditoId));
+      res.json(await previsualizarPago(repo, param(req.params.creditoId), fechaCorteDe(req)));
     })
   );
 
@@ -572,6 +572,10 @@ const STATUS_POR_CODIGO: Record<string, number> = {
 
 function formatearQ(centavos: number): string {
   return `Q${(centavos / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function param(v: string | string[] | undefined): string {
+  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
 /**
